@@ -34,10 +34,16 @@ Agent 基准分类：
 │   ├── OSWorld：操作系统级任务
 │   └── Computer Use benchmarks
 │
-└── 工具使用
-    ├── ToolBench：API 工具选择和使用
-    ├── API-Bank：API 调用正确性
-    └── TaskBench：多工具组合
+├── 工具使用
+│   ├── ToolBench：API 工具选择和使用
+│   ├── API-Bank：API 调用正确性
+│   └── TaskBench：多工具组合
+│
+└── Memory（长期记忆）
+    ├── LoCoMo：超长多模态对话的持久记忆（35 sessions / 9K tokens）
+    ├── LongMemEval：500 题，5 大记忆能力（含知识更新与 abstention）
+    ├── MemoryBank / DialSim / PerLTQA：早期记忆基准
+    └── BEAM（1M/10M）：超长上下文 + 大规模事实检索
 ```
 
 ### SWE-bench 详解
@@ -83,6 +89,67 @@ gaia_benchmark = {
     ),
 }
 ```
+
+### Memory 专项基准：LoCoMo & LongMemEval
+
+通用 Agent 基准（SWE-bench、GAIA）几乎不评估**跨会话记忆**能力。设计带 memory 的 Agent 时，必须使用记忆专项基准。
+
+```python
+# LoCoMo（Maharana et al., 2024，CMU + Snap Research）
+locomo = {
+    "对话规模": "50 段对话，平均 35 sessions / 9K tokens",
+    "QA 规模": "约 1500-2000 个问答对",
+    "5 类任务": {
+        "single-hop":  "841 题——单步事实检索",
+        "multi-hop":   "282 题——跨 session 串联多个事实",
+        "open-domain": "96 题——结合外部世界知识",
+        "temporal":    "321 题——时间顺序/优先级推理",
+        "adversarial": "对抗性问题——抗误导/干扰",
+    },
+    "特色": "persona-grounded + 多模态对话",
+    "局限": "对话偏短（~9K），话题有限",
+}
+
+# LongMemEval（Wu et al., 2024，ICLR 2025）
+longmemeval = {
+    "QA 规模": "500 题人工构造（LongMemEval_S 标准集）",
+    "context 长度": "4K~115K tokens（动态可扩展）",
+    "5 大核心记忆能力": {
+        "Information Extraction":    "从长对话中提取关键信息",
+        "Multi-Session Reasoning":   "跨多个 session 的推理（30 题）",
+        "Temporal Reasoning":        "时间相关推理（133 题）",
+        "Knowledge Updates":         "用新信息覆盖旧信息（78 题）⭐ LoCoMo 缺失项",
+        "Abstention":                "识别不可回答的问题，不要瞎编",
+    },
+    "为什么比 LoCoMo 难": "测的是 human-assistant 对话，更贴近真实使用",
+    "残酷的事实": [
+        "long-context LLM 直接喂全文，准确率掉 30%-60%",
+        "商用系统在简化场景下也只有 30%-70% 准确率",
+    ],
+}
+```
+
+**典型评估流水线**（ReMe、Mem0、MemMachine 等都遵循）：
+
+```
+Stage 1：Memory Ingestion（摄入）
+  历史 sessions 逐条进入 Agent → 提取事实/关系 → 写入向量库或图库
+
+Stage 2：Memory Retrieval & QA（检索+回答）
+  评测问题 → 检索 top-k 记忆 → LLM 生成答案 → LLM-as-Judge 评分
+  
+评分模型：gpt-4o-2024-08-06，与人类专家一致性 >97%
+```
+
+**2025 SOTA 参考**（用于面试时给出量化对比）：
+
+| 系统 | LoCoMo | LongMemEval_S | 备注 |
+|------|--------|---------------|------|
+| Full-context LLM 直接喂 | 基线 | 基线 | 准确率掉 30-55% |
+| LoCoMo-RAG / 向量基线 | 中 | 中 | 多会话场景明显劣化 |
+| Mem0（2025 新算法） | **91.6** | **93.4** | 平均 <7K token/检索 |
+| ENGRAM-R | — | +21.8pp | token 减 95.5% |
+| MemMachine v0.2 | SOTA | 93.0 | 6 维优化消融 |
 
 ### 设计 Agent Benchmark 的原则
 
@@ -198,6 +265,10 @@ swe_mera = {
 
 4. **追问："小团队如何设计自己的 Agent 评估？"** — 从生产日志中采样 50-100 个典型任务，定义明确的成功标准（可自动验证的优先），标注难度和类别。每次 Agent 更新后运行这个测试套件作为回归测试。不需要从头建造大规模基准。
 
+5. **追问："如何设计 Memory Benchmark？"** — 直接复用 LongMemEval（500 题，5 类能力）+ LoCoMo（多会话长对话）就能覆盖大部分场景。如果业务自建，要重点覆盖 4 个维度：(1) **Multi-session reasoning**——跨会话串联事实；(2) **Temporal reasoning**——时间顺序、"上次/最近"等时间约束；(3) **Knowledge update**——用户改了偏好后能否覆盖旧记忆而不并存（LoCoMo 缺这块，LongMemEval 加上的）；(4) **Abstention**——记忆里没有的事不要瞎编。评估流水线两阶段：摄入（写入记忆系统）+ 检索 QA（LLM-as-Judge 打分，与人类一致性可达 97%+）。
+
+6. **追问："为什么 long-context LLM 直接喂全部历史不行？"** — LongMemEval 实测，把全部对话直接塞进 long-context 模型，准确率比带 memory 系统**掉 30%-60%**。原因有三：(1) **lost in the middle**——超过几万 token 后中间部分信息丢失；(2) **干扰信息**——大量无关历史稀释了相关信号；(3) **knowledge update 失效**——模型很难在长序列中识别"后面的信息覆盖前面的"。这就是为什么需要专门的记忆架构（提取+检索+rerank）而不是无脑加大 context。
+
 ## 参考资料
 
 - [Agent Evaluation: Metrics, Benchmarks and Safety Standards](https://mbrenndoerfer.com/writing/agent-evaluation-metrics-benchmarks-safety)
@@ -205,3 +276,8 @@ swe_mera = {
 - [SWE-bench Leaderboards](https://www.swebench.com/)
 - [AI Agent Benchmarks are Broken (Daniel Kang)](https://medium.com/@danieldkang/ai-agent-benchmarks-are-broken-c1fedc9ea071)
 - [SWE-MERA: A Dynamic Benchmark for Evaluating LLMs (arXiv)](https://arxiv.org/html/2507.11059v1)
+- [LoCoMo: Evaluating Very Long-Term Conversational Memory (Snap Research)](https://snap-research.github.io/locomo/)
+- [LongMemEval: Benchmarking Chat Assistants on Long-Term Memory (arXiv 2410.10813)](https://arxiv.org/pdf/2410.10813)
+- [Mem0: Production-Ready Long-Term Memory (arXiv 2504.19413)](https://arxiv.org/abs/2504.19413)
+- [Benchmarking Mem0 token-efficient memory algorithm](https://mem0.ai/research)
+- [MemMachine v0.2 on LoCoMo](https://memmachine.ai/blog/2025/12/memmachine-v0.2-delivers-top-scores-and-efficiency-on-locomo-benchmark/)

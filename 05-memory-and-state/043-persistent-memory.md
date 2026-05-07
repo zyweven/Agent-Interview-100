@@ -177,6 +177,97 @@ class MemoryLifecycle:
                 await self.delete(mem.id)  # 低权重且很少访问 → 遗忘
 ```
 
+### 记忆检索优化策略
+
+写入容易，**检索**才是 Memory 系统能不能用的胜负手。Mem0 论文（arXiv 2504.19413）和 MemMachine 的消融实验都表明：**检索阶段的优化（+4.2%）远比摄入阶段（+0.8%）影响大**。下面是工业界主流的 4 个优化方向。
+
+**优化 1：多因子打分（Generative Agents 经典公式）**
+
+Stanford 的 Generative Agents（Park et al., UIST'23）开创了**三因子加权**检索，至今是主流参考：
+
+```python
+# 经典公式：每条记忆的最终得分
+score = α_recency × recency + α_importance × importance + α_relevance × relevance
+
+# 三个分量：
+recency    = 0.995 ** hours_since_last_access     # 指数衰减（每小时衰减 0.5%）
+importance = llm_rate(memory, scale=1-10) / 10    # LLM 打 1-10 分的归一化
+relevance  = cosine_similarity(query_emb, mem_emb) # 语义相似度
+
+# 三项分别 min-max 归一化到 [0,1]，论文中 α 全部取 1
+# 例：刷牙 importance=1，离婚 importance=10
+```
+
+为什么需要三因子？纯向量相似度会让"频繁出现但无意义"的记忆压倒"少见但重要"的记忆——Klaus 之所以选 Maria 一起做研究而不是天天碰面的 Wolfgang，靠的就是 importance 分量。
+
+**优化 2：多信号融合（Mem0 2025 新算法）**
+
+```python
+# Mem0 多信号并行打分 + 融合
+results = parallel(
+    semantic_search(query),    # 向量语义
+    bm25_keyword_search(query), # 关键词（实体重的查询表现好）
+    entity_match(query),        # 命名实体直接匹配
+)
+final = score_fusion(results)  # 加权融合后排序
+
+# 性能：LoCoMo 91.6 / LongMemEval 93.4，平均 <7K token/检索
+# 对比：full-context 方法要烧 25K+ tokens
+```
+
+**优化 3：两阶段检索（Vector → Reranker）**
+
+```
+生产标准管线（25-30ms 总延迟）：
+  Query → Embed (TEI/GPU, ~2ms)
+        → Vector Top-50 (Qdrant/Chroma, ~3ms)   ← 召回宽
+        → Reranker Top-5 (Cohere/Zero-Entropy, ~20ms) ← 精度高
+        → 注入 Agent context
+
+为什么需要 Reranker？
+  ANN 向量检索的 false positive 会污染上下文。
+  Reranker 是 cross-encoder（query+doc 联合编码），
+  比 bi-encoder 的向量相似度精度高一个数量级，
+  但只能跑 50-100 条候选（成本高）→ 故必须先用向量粗排。
+
+延迟预算（Mem0 实测）：
+  keyword search:  +10ms
+  rerank:         +150ms
+  filter_memories: +250ms
+  → 全开总延迟约 0.41s
+```
+
+**优化 4：Query 改写 / 检索 Agent**
+
+```python
+# HyDE（Hypothetical Document Embeddings）
+# 让 LLM 先生成"假想答案"，再用假想答案的向量去检索
+# 解决：用户原始 query 太短/太抽象，向量匹配不到
+
+hypothetical = llm.generate(f"假设这个问题的答案是：{query}")
+better_emb = embed(hypothetical)
+results = vector_search(better_emb)
+
+# 局限（MemMachine 2025 论文指出）：
+#   HyDE / BM25 hybrid / chunk rerank 都是单查询策略，
+#   解决不了"依赖链"问题（如：先要找 A，A 决定要不要找 B）
+#
+# 解法：Retrieval Agent
+agent_strategy = router.route(query)
+if agent_strategy == "direct":         # 简单查询
+    return vector_search(query)
+elif agent_strategy == "decompose":    # 复杂查询拆分
+    sub_queries = llm.decompose(query)
+    return parallel_search(sub_queries)
+elif agent_strategy == "iterative":    # 链式：搜→看→再搜
+    return chain_of_query(query)
+```
+
+**实战推荐组合：**
+- **轻量场景**（<10万条记忆、单用户）：向量检索 + 三因子打分 + 时间衰减
+- **生产场景**（多用户、跨会话）：多信号融合（vector+BM25+entity）+ reranker
+- **复杂推理**（多跳、依赖链）：上面 + Retrieval Agent（query 路由 + decomposition）
+
 ### 安全考虑
 
 ```python
@@ -214,10 +305,18 @@ security_concerns = {
 
 4. **追问："记忆安全的最大风险是什么？"** — MEXTRA 攻击证明存储的记忆可被 prompt injection 提取。防护需要：记忆内容脱敏、访问控制、输入验证、以及将记忆视为"可被操纵的不可信数据"。
 
+5. **追问："Memory Retrieval 怎么优化？纯向量检索为什么不够？"** — 纯向量有三个硬伤：(1) 没有时间维度——昨天和半年前的记忆同等对待；(2) 没有重要性维度——"刷牙"和"我离婚了"被同等检索；(3) ANN 召回有 false positive，污染 context。工业界标准方案是 **Generative Agents 三因子打分**（recency × importance × relevance）+ **多信号融合**（vector+BM25+entity 并行）+ **两阶段 rerank**（vector top-50 → cross-encoder top-5）。Mem0 用这套方案在 LongMemEval 拿到 93.4，平均每次检索只烧 7K token，比 full-context 方案省 90%+。
+
+6. **追问："HyDE 等查询改写为什么不够用？"** — HyDE / BM25 hybrid / chunk rerank 这些都是**单查询策略**——只在原查询的一次表达上做文章。但很多记忆问题是**依赖链**：要回答"我上次提到的那个客户的预算多少"，得先定位"上次提到的客户是谁"再查预算。MemMachine 论文（2025）的解法是 **Retrieval Agent**——加一层 LLM 路由器，把查询分类为 direct/decompose/iterative 三种策略，复杂查询走 query decomposition 或 chain-of-query，HotpotQA hard 上能到 93.2%。
+
 ## 参考资料
 
 - [AI Agent Memory: Types, Architecture & Implementation (Redis)](https://redis.io/blog/ai-agent-memory-stateful-systems/)
 - [AI Agent with Multi-Session Memory (Towards Data Science)](https://towardsdatascience.com/ai-agent-with-multi-session-memory/)
-- [Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory (arXiv)](https://arxiv.org/pdf/2504.19413)
+- [Mem0: Building Production-Ready AI Agents with Scalable Long-Term Memory (arXiv 2504.19413)](https://arxiv.org/pdf/2504.19413)
 - [Powering Long-Term Memory for Agents with LangGraph and MongoDB](https://www.mongodb.com/company/blog/product-release-announcements/powering-long-term-memory-for-agents-langgraph)
 - [Build Persistent Memory with Mem0, ElastiCache, and Neptune (AWS)](https://aws.amazon.com/blogs/database/build-persistent-memory-for-agentic-ai-applications-with-mem0-open-source-amazon-elasticache-for-valkey-and-amazon-neptune-analytics/)
+- [Generative Agents: Interactive Simulacra of Human Behavior (Park et al., UIST'23)](https://dl.acm.org/doi/fullHtml/10.1145/3586183.3606763)
+- [Mem0 Advanced Retrieval Documentation](https://docs.mem0.ai/platform/features/advanced-retrieval)
+- [Mem0 Token-Efficient Algorithm Benchmark](https://mem0.ai/research)
+- [MemMachine: Ground-Truth-Preserving Memory System (arXiv 2604.04853)](https://arxiv.org/html/2604.04853v1)

@@ -182,7 +182,71 @@ async def call_tool(name: str, arguments: dict):
 
 ### 生态现状
 
-MCP 已被主要 AI 平台采纳：OpenAI、Google DeepMind 均已支持。该协议由 Linux Foundation 托管，官方 SDK 覆盖 TypeScript、Python、C#、Kotlin、Go、Ruby 等语言。社区已有数千个开源 MCP Server 可直接使用。
+MCP 已被主要 AI 平台采纳：OpenAI、Google DeepMind 均已支持。该协议由 Linux Foundation（2025 年 12 月转入 Agentic AI Foundation）托管，官方 SDK 覆盖 TypeScript、Python、C#、Kotlin、Go、Ruby 等语言。社区已有数千个开源 MCP Server 可直接使用。
+
+### MCP vs Claude Skills：连接性 vs 方法论
+
+Anthropic 在 2025 年 10 月推出了 **Claude Skills**——这是一种与 MCP 互补但**架构哲学完全不同**的扩展机制。理解两者关系是 2025-2026 年 Agent 工程师的高频面试点。
+
+**核心区别：what vs how**
+
+```
+厨师类比：
+  MCP   = 食材 + 高端厨具（提供能力）
+  Skill = 菜谱（教如何使用这些能力）
+
+技术定义：
+  MCP   = 连接层（Connectivity）—— 让 Claude 能访问外部工具/数据
+  Skill = 程序性知识层（Procedural Knowledge）—— 教 Claude 如何完成特定任务
+```
+
+**Skill 的形态**：一个文件夹，包含 `SKILL.md`（指令）、可选脚本和资源。例如：
+- 团队的 Git commit message 规范
+- 公司品牌的 PPT 生成流程
+- 一套数据校验工作流
+
+**Progressive Disclosure：Skill 的关键创新**
+
+```
+Skill 三层加载（按需）：
+  Level 1：metadata（~100 tokens）—— 启动时仅加载 name + description
+  Level 2：SKILL.md 完整指令（<5k tokens）—— 判定相关时才加载
+  Level 3：脚本/资源文件 —— 执行时才加载
+
+MCP 的加载模式（启动即加载）：
+  所有工具的完整 schema 在 initialize 时就进入 context
+  → 实测：连接 2-3 个 MCP Server 后，工具调用准确率显著下降
+  → 大型企业 MCP Server 经常占用整个 context window，导致 hallucination
+```
+
+**对比表：**
+
+| 维度 | MCP | Claude Skills |
+|------|-----|---------------|
+| 解决的问题 | 跨应用的工具集成（连接） | 同一任务的一致性执行（方法） |
+| 加载策略 | 启动时全量加载 | 渐进式按需加载 |
+| Token 成本 | 每个会话固定开销 | 用多少付多少 |
+| 分发方式 | 远程 MCP Server（网络可达） | 本地 zip 包（占用本地空间） |
+| 工具发现 | 运行时 `tools/list` 协议 | 文件系统扫描 metadata |
+| 跨平台 | 标准开放，OpenAI/Google 都支持 | Anthropic 特有 |
+| 适合场景 | 数据库、SaaS、IDE、Git 等外部系统 | 团队规范、文档模板、固定工作流 |
+
+**两者协同（Anthropic 官方推荐模式）：**
+
+```python
+# 真实场景：用 Claude 处理客户工单
+# MCP 提供连接：从 Zendesk 拉工单、写回 Salesforce
+mcp_servers = ["zendesk-mcp", "salesforce-mcp"]
+
+# Skill 提供方法：教 Claude 如何分类工单、如何措辞回复
+skills = [
+    "ticket-triage-workflow.skill",   # 分类规则 + 优先级标准
+    "customer-reply-template.skill",  # 公司标准措辞模板
+]
+# MCP 给 Claude "做什么的能力"，Skill 给 Claude "怎么做的指南"
+```
+
+**为什么 Skills 不能用 MCP 实现？** 把 Skill 包装成 MCP Server 在技术上可行，但会**破坏 Skill 的核心价值**——progressive disclosion 失效（MCP 协议要求 schema 全量返回），并引入额外的 RPC 开销，还原回了 MCP 的 token 浪费问题。两者是**正交**的设计，不应合并。
 
 ### MCP 实际使用中的问题与解决
 
@@ -256,6 +320,10 @@ MCP 的 JSON-RPC over stdio 是黑盒。可以使用 `npx @modelcontextprotocol/
 
 6. **追问："MCP 最大的安全风险是什么？"** — Tool Poisoning：恶意 MCP Server 注册看似有用但实际执行恶意操作的工具。防御手段：Server 签名验证（只加载可信来源）、工具白名单（限制可调用工具集）、沙箱隔离（Server 运行在受限容器中）。
 
+7. **追问："Skill 和 MCP 是什么关系？什么时候用哪个？"** — 一句话区分：**MCP 是连接（what），Skill 是方法（how）**。需要 Claude **访问外部系统**（数据库、Slack、GitHub、内部 API）→ MCP；需要 Claude **以特定方式完成某项任务**（团队代码规范、文档模板、固定工作流）→ Skill。两者最强的组合是协同使用：MCP 提供原始能力，Skill 提供使用这些能力的标准操作流程。Skill 的 progressive disclosure（按需加载）解决了 MCP 启动即全量加载导致的 context 膨胀和工具调用准确率下降问题——实测连接 2-3 个 MCP Server 后准确率就开始明显下降，而 Skills 可以挂载几十个而几乎不占 context。
+
+8. **追问："Subagent 和 Skill 又有什么区别？"** — Subagent 是**独立的 Agent 进程**（有自己的 context、工具、模型），主 Agent 通过任务委派调用它，常用于隔离 context 或并行任务；Skill 是**注入主 Agent 的程序性指令**，不开新进程，只是按需加载到当前 context。简单说：Subagent = 派一个新员工去办，Skill = 给当前员工看一份操作手册。
+
 ## 参考资料
 
 - [Model Context Protocol Specification](https://modelcontextprotocol.io/specification/2025-11-25)
@@ -263,3 +331,7 @@ MCP 的 JSON-RPC over stdio 是黑盒。可以使用 `npx @modelcontextprotocol/
 - [Introducing the Model Context Protocol (Anthropic)](https://www.anthropic.com/news/model-context-protocol)
 - [Model Context Protocol Introduction for Developers (Stytch)](https://stytch.com/blog/model-context-protocol-introduction/)
 - [MCP 101: Understanding the Model Context Protocol (Itential)](https://www.itential.com/blog/company/itential-mcp/mcp-101-understanding-the-model-context-protocol/)
+- [Claude Skills vs. MCP: A Technical Comparison (IntuitionLabs)](https://intuitionlabs.ai/articles/claude-skills-vs-mcp)
+- [Claude Skills vs. MCP: Two AI Customization Philosophies (Subramanya N, 2025-10)](https://subramanya.ai/2025/10/30/claude-skills-vs-mcp-a-tale-of-two-ai-customization-philosophies/)
+- [Skills explained: How Skills compares to prompts, Projects, MCP, and subagents (Anthropic)](https://claude.com/blog/skills-explained)
+- [Progressive Disclosure Might Replace MCP (MCPJam)](https://www.mcpjam.com/blog/claude-agent-skills)
