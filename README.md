@@ -26,6 +26,8 @@
 
 ## 📖 目录结构
 
+> 📌 **关于题号**：本项目历经多次合并精简与差异化扩展，部分编号（如 `#004`、`#105` 等共 12 个）已废弃不再使用。保留原号以维持外部链接、文章交叉引用与 Git 历史的稳定。**当前实际题数 100，编号最大至 #112。**
+
 ### 一、🏛️ Agent 架构 (`01-agent-architecture/`) — 10 题
 
 Agent 系统的核心设计理念，从基本概念到生产级架构设计。
@@ -250,7 +252,7 @@ Agent 系统的安全风险防控与对齐策略。
 | 🏗️ **系统设计** | [#010](01-agent-architecture/010-production-agent-system-design.md) | 从原则到实战案例，完整体验 Agent 系统设计全过程 |
 | 🔍 **代码 Review** | [#107](10-production-and-deployment/107-agent-code-review.md) | 审查真实 Agent 代码中的问题，培养代码质量意识和最佳实践 |
 | 🔗 **递进追问链** | [#108](01-agent-architecture/108-interview-deep-dive-chain.md) | 10 层递进追问，从基础概念一步步深入到系统设计，串联知识体系 |
-| 🛠️ **Harness 主题** | [#109](01-agent-architecture/109-what-is-agent-harness.md)、[#110](11-frameworks/110-coding-agent-harness-comparison.md) | 2025-2026 Coding Agent 工程实践焦点，区分 Harness / Framework / Runtime 三层抽象 |
+| 🛠️ **Harness 主题** | [#109](01-agent-architecture/109-what-is-agent-harness.md)、[#110](11-frameworks/110-coding-agent-harness-comparison.md)、[#111](08-evaluation/111-eval-harness-design.md)、[#112](10-production-and-deployment/112-agent-sandbox-runtime.md) | 2025-2026 Coding Agent 工程实践焦点：三层抽象（Harness/Framework/Runtime）+ Coding Harness 横评 + Eval Harness 设计 + Sandbox/Runtime 选型 |
 
 ---
 
