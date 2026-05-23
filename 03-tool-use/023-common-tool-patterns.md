@@ -136,20 +136,26 @@ import subprocess
 import tempfile
 
 def run_python(code: str) -> dict:
-    """在隔离环境中执行代码"""
-    # 安全检查：禁止危险操作
-    forbidden = ["os.system", "subprocess", "eval(", "exec(", "__import__"]
-    if any(f in code for f in forbidden):
-        return {"error": "代码包含禁止的操作"}
+    """在隔离环境中执行代码。
 
-    with tempfile.NamedTemporaryFile(suffix=".py", mode="w") as f:
+    重要：不要用"子串黑名单"做沙箱（如禁止 'os.system'、'eval(' 等）——
+    这是被广泛证伪的反模式。攻击者可以用 getattr/__import__('os')/字符串拼接/
+    base64/exec(compile(...)) 等任意手法绕过。真正的沙箱必须依赖**进程/容器隔离**
+    （Docker、gVisor、E2B/Modal/Daytona 等 Runtime）+ seccomp + 无网络/无文件系统。
+    """
+    # 注：Windows 上 NamedTemporaryFile 默认独占锁会让子进程读不到文件，
+    # 跨平台写法应该用 delete=False + 手动 unlink，或 mkstemp。
+    with tempfile.NamedTemporaryFile(suffix=".py", mode="w", delete=False) as f:
         f.write(code)
         f.flush()
+        # 仅作为本地 demo：生产应换成 E2B / Modal / Daytona 等隔离 Runtime
         result = subprocess.run(
-            ["python", f.name],
+            ["docker", "run", "--rm", "--network=none",
+             "--memory=512m", "--cpus=1",
+             "-v", f"{f.name}:/code.py:ro",
+             "python:3.12-slim", "python", "/code.py"],
             capture_output=True, text=True,
-            timeout=30,  # 30 秒超时
-            # 生产环境应使用 Docker 容器隔离
+            timeout=30,
         )
     return {
         "stdout": result.stdout[:2000],  # 截断防止 token 爆炸
@@ -159,10 +165,11 @@ def run_python(code: str) -> dict:
 ```
 
 **安全要点：**
-- 使用 Docker 或 gVisor 等容器隔离
+- **真隔离**：Docker / gVisor / Firecracker / V8 Isolate，而非子串黑名单
 - 设置 CPU/内存/时间限制
 - 禁止网络访问（除非明确需要）
 - 禁止文件系统写入（或限制路径）
+- 生产环境推荐 E2B / Modal / Daytona / Cloudflare Workers 这类专用沙箱 Runtime
 
 ### 模式 4：写操作（动作执行）
 

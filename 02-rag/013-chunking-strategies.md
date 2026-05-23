@@ -48,13 +48,20 @@ chunks = splitter.split_text(document)
 ```python
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+# 注意：默认 chunk_size 单位是「字符」，不是 token。若需按 token 切，
+# 用 RecursiveCharacterTextSplitter.from_tiktoken_encoder(...) 或显式传 length_function。
 splitter = RecursiveCharacterTextSplitter(
-    chunk_size=512,
+    chunk_size=512,        # 字符数，中文常按 1.5-2 字符/token 估算
     chunk_overlap=50,
     separators=["\n\n", "\n", "。", "，", " ", ""]
     # 优先级：段落 > 换行 > 句号 > 逗号 > 空格 > 字符
 )
 chunks = splitter.split_text(document)
+
+# 若需严格按 token：
+# splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+#     chunk_size=512, chunk_overlap=50,
+# )
 ```
 
 | 优点 | 缺点 |

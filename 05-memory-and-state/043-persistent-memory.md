@@ -211,7 +211,7 @@ results = parallel(
 )
 final = score_fusion(results)  # 加权融合后排序
 
-# 性能：LoCoMo 91.6 / LongMemEval 93.4，平均 <7K token/检索
+# 性能：LoCoMo 92.5 / LongMemEval 94.4，平均 <7K token/检索
 # 对比：full-context 方法要烧 25K+ tokens
 ```
 
@@ -305,7 +305,7 @@ security_concerns = {
 
 4. **追问："记忆安全的最大风险是什么？"** — MEXTRA 攻击证明存储的记忆可被 prompt injection 提取。防护需要：记忆内容脱敏、访问控制、输入验证、以及将记忆视为"可被操纵的不可信数据"。
 
-5. **追问："Memory Retrieval 怎么优化？纯向量检索为什么不够？"** — 纯向量有三个硬伤：(1) 没有时间维度——昨天和半年前的记忆同等对待；(2) 没有重要性维度——"刷牙"和"我离婚了"被同等检索；(3) ANN 召回有 false positive，污染 context。工业界标准方案是 **Generative Agents 三因子打分**（recency × importance × relevance）+ **多信号融合**（vector+BM25+entity 并行）+ **两阶段 rerank**（vector top-50 → cross-encoder top-5）。Mem0 用这套方案在 LongMemEval 拿到 93.4，平均每次检索只烧 7K token，比 full-context 方案省 90%+。
+5. **追问："Memory Retrieval 怎么优化？纯向量检索为什么不够？"** — 纯向量有三个硬伤：(1) 没有时间维度——昨天和半年前的记忆同等对待；(2) 没有重要性维度——"刷牙"和"我离婚了"被同等检索；(3) ANN 召回有 false positive，污染 context。工业界标准方案是 **Generative Agents 三因子打分**（recency × importance × relevance）+ **多信号融合**（vector+BM25+entity 并行）+ **两阶段 rerank**（vector top-50 → cross-encoder top-5）。Mem0 用这套方案在 LongMemEval 拿到 94.4，平均每次检索只烧 7K token，比 full-context 方案省 90%+。
 
 6. **追问："HyDE 等查询改写为什么不够用？"** — HyDE / BM25 hybrid / chunk rerank 这些都是**单查询策略**——只在原查询的一次表达上做文章。但很多记忆问题是**依赖链**：要回答"我上次提到的那个客户的预算多少"，得先定位"上次提到的客户是谁"再查预算。MemMachine 论文（2025）的解法是 **Retrieval Agent**——加一层 LLM 路由器，把查询分类为 direct/decompose/iterative 三种策略，复杂查询走 query decomposition 或 chain-of-query，HotpotQA hard 上能到 93.2%。
 

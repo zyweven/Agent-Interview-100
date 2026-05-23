@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-LLM 评估分为三大类：(1) **自动指标评估**——用算法计算的确定性指标（如 BLEU、ROUGE、精确匹配），速度快、成本低，但只能衡量表面特征；(2) **人工评估**——由人类标注者评判输出质量，是"金标准"但成本高、难以规模化；(3) **LLM-as-Judge**——用强 LLM 评估其他 LLM 的输出，与人工评估的一致性达 80%+，是近年主流趋势。生产环境推荐**混合方案**：自动指标做初筛，LLM-as-Judge 做质量评估，人工评估做最终校准。
+LLM 评估分为三大类：(1) **自动指标评估**——用算法计算的确定性指标（如 BLEU、ROUGE、精确匹配），速度快、成本低，但只能衡量表面特征；(2) **人工评估**——由人类标注者评判输出质量，是"金标准"但成本高、难以规模化；(3) **LLM-as-Judge**——用强 LLM 评估其他 LLM 的输出，顶级 Judge（GPT-4o / Claude Opus）与人工评估的 **Cohen's Kappa ≈ 0.78-0.84**，逼近人类-人类一致性（κ≈0.80），是近年主流趋势。⚠️ 注意 percent agreement 容易虚高（κ=0.62 也能 >80% 一致率），学术界（"Judging the Judges" arXiv:2406.12624）建议用 Cohen's Kappa 才是 Judge 可靠性的正确指标。生产环境推荐**混合方案**：自动指标做初筛，LLM-as-Judge 做质量评估，人工评估做最终校准。
 
 然而，当评估对象从 LLM 升级为 Agent，评估方法论需要根本性扩展。LLM 评估关注**单次输入输出的质量**，而 Agent 评估关注**多步决策轨迹的整体表现**——不仅看最终结果，还要评估推理过程、工具使用、规划质量和错误恢复能力。核心差异在于：Agent 涉及 LLM + 工具 + 环境的交互链，非确定性更强（同一任务可能有多条正确路径），评估维度也从文本质量扩展到任务完成能力、轨迹效率和行为安全。
 
@@ -49,11 +49,14 @@ from nltk.translate.bleu_score import sentence_bleu
 score = sentence_bleu([reference.split()], prediction.split())
 # 衡量 n-gram 重叠度，0-1 分
 
-# 3. ROUGE（摘要质量）
+# 3. ROUGE（摘要质量，recall-oriented；与 precision-oriented 的 BLEU 互补）
 from rouge_score import rouge_scorer
 scorer = rouge_scorer.RougeScorer(['rouge1', 'rougeL'])
 scores = scorer.score(reference, prediction)
-# ROUGE-1: 单词重叠, ROUGE-L: 最长公共子序列
+# ROUGE-1: unigram 召回率（reference 中有多少出现在 prediction）
+# ROUGE-L: 最长公共子序列（衡量句子级流畅度）
+# 对比 BLEU：BLEU 是 precision-oriented（prediction 中有多少匹配 reference）
+# 摘要任务用 ROUGE，翻译任务用 BLEU 是因为这两类任务对漏掉信息 vs 多说信息的容忍度不同
 
 # 4. F1 Score（信息提取）
 def token_f1(prediction, reference):

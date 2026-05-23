@@ -190,8 +190,12 @@ class GRPOTrainer:
                 clipped_ratio * advantages[i]
             )
 
-            # KL 散度惩罚：防止策略偏离参考模型太远
-            kl_penalty = self.kl_coeff * (new_logprob - ref_logprob)
+            # KL 散度惩罚（K3 unbiased estimator）：防止策略偏离参考模型太远
+            # 原论文 DeepSeekMath (arXiv:2402.03300) 使用的是 K3 无偏估计：
+            #   KL ≈ exp(r-n) - (r-n) - 1，其中 r = ref_logprob, n = new_logprob
+            # 这个估计始终 ≥ 0，期望值等于真 KL 散度，方差低于线性差分。
+            log_ratio = ref_logprob - new_logprob
+            kl_penalty = self.kl_coeff * (torch.exp(log_ratio) - log_ratio - 1)
 
             total_loss += (policy_loss + kl_penalty).mean()
 
@@ -305,6 +309,41 @@ emergent_behaviors = [
     "思考时间自适应——简单题想得少，难题想得多",
 ]
 ```
+
+### GRPO 之后：2025-2026 后续算法演进
+
+GRPO 不是终点。2025 开始陆续出现一批"GRPO 后续"，主要解决 GRPO 在长 trajectory、稀疏奖励、训练稳定性上的痛点：
+
+```python
+post_grpo_algorithms = {
+    "DAPO (ByteDance, 2025)": {
+        "全称": "Dynamic Sampling Policy Optimization",
+        "改进点": (
+            "1. Clip-Higher：放宽正向 ratio 的裁剪上界，缓解 entropy collapse；"
+            "2. Dynamic Sampling：剔除组内全对/全错样本（advantage 全 0 无梯度）；"
+            "3. Token-level loss：长序列按 token 而非 sequence 平均；"
+            "4. Overlong-shaping：长输出软惩罚而非硬截断"
+        ),
+        "效果": "AIME 2024 使用 Qwen2.5-32B 在 50% steps 内超过 R1-Zero",
+        "开源": "ByteDance 公开了完整训练栈（含数据 + 代码）",
+    },
+    "GSPO (Qwen Team, 2025)": {
+        "全称": "Group Sequence Policy Optimization",
+        "改进点": "把 ratio/clipping 从 token 级别上升到 sequence 级别，解决长 CoT 训练不稳",
+        "应用": "Qwen3 系列推理模型训练",
+    },
+    "REINFORCE++/RLOO 改进": {
+        "思路": "把 GRPO 退化为更简单的 REINFORCE + baseline 估计",
+        "代表": "RLOO（Removed-One-Out baseline）、Reinforce++（NousResearch）",
+    },
+    "VAPO / Loop-GRPO / DR-GRPO": {
+        "方向": "Value-augmented、loop-aware、debiased GRPO 等多个支线",
+        "共识": "GRPO 是 2025 后训练范式的事实基线，但需要针对具体任务大量改良",
+    },
+}
+```
+
+关键观察：**2026 工业界训练推理/Agent 模型时已经很少直接用 paper-version GRPO**，几乎都跑在 DAPO/GSPO 这一代改良算法上。面试中如果只能说出 "GRPO = DeepSeek-R1"，会显得知识停在 2025-01。
 
 ### 从 RLHF 到 Agentic-RL 的演进路线
 

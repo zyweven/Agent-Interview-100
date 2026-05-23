@@ -206,7 +206,10 @@ def sensitive_action(state: AgentState) -> dict:
 ### 完整 ReAct Agent 示例
 
 ```python
-from langgraph.prebuilt import create_react_agent
+# LangChain 1.0 GA（2025-10）：推荐 langchain.agents.create_agent
+# langgraph.prebuilt.create_react_agent 已 deprecated
+from langchain.agents import create_agent
+from langgraph.checkpoint.memory import MemorySaver
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 
@@ -220,8 +223,8 @@ def search_flights(origin: str, destination: str) -> str:
     """搜索航班"""
     return f"{origin}→{destination}：找到 3 个航班"
 
-# 一行创建完整的 ReAct Agent
-agent = create_react_agent(
+# 一行创建完整的 ReAct Agent（v1.0 GA 推荐方式）
+agent = create_agent(
     model=ChatOpenAI(model="gpt-4o"),
     tools=[get_weather, search_flights],
     checkpointer=MemorySaver(),
@@ -232,6 +235,9 @@ result = agent.invoke(
     {"messages": [("human", "我想去北京，先查天气再搜航班")]},
     config={"configurable": {"thread_id": "trip-1"}},
 )
+
+# 注：create_agent 底层仍是 LangGraph 图；旧版 create_react_agent 在 v1.x 仍可用
+# 但官方明确建议新代码使用 langchain.agents.create_agent
 ```
 
 ## 常见误区 / 面试追问

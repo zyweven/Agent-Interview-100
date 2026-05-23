@@ -68,7 +68,8 @@ async def retry_with_backoff(func, max_retries=3, base_delay=1.0):
                 raise  # 最后一次仍失败，抛出异常
             delay = base_delay * (2 ** attempt) + random.uniform(0, 1)  # 加 jitter
             await asyncio.sleep(delay)
-            # 等待: ~1s, ~3s, ~7s
+            # attempt=0,1,2 → 等待 ~1-2s, ~2-3s, ~4-5s
+            # 更稳健的写法是 AWS Full Jitter：delay = random.uniform(0, base * 2**attempt)
 ```
 
 **重试决策矩阵：**

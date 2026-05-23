@@ -79,16 +79,21 @@ class HallucinationDetector:
         }
 
     # 方法 3：FINCH-ZK（零知识幻觉检测）
+    # 注：这里的"零知识"指**无需外部知识库**（zero-knowledge resources），
+    # 不是密码学意义的 ZKP；核心机制是**跨多个模型的一致性比对**，
+    # 利用不同模型对同一段落的回答差异判断幻觉，而非单模型的"内部一致性"
     async def finch_zk_detection(self, response):
-        """分段检测 + 交叉一致性评估"""
+        """分段检测 + 跨模型一致性评估（zero external knowledge）"""
         # 1. 将回答分成语义段落
         segments = self.segment_response(response)
 
-        # 2. 对每个段落独立验证
+        # 2. 对每个段落用多个模型独立生成，比对一致性
         segment_scores = []
         for segment in segments:
-            # 不依赖外部知识，只看内部一致性
-            score = await self.cross_consistency_eval(segment, response)
+            # 不依赖外部知识库，靠多模型互验
+            score = await self.cross_model_consistency(segment, models=[
+                "gpt-4o", "claude-sonnet-4-5", "gemini-pro"
+            ])
             segment_scores.append({"text": segment, "score": score})
 
         # 3. 加权评分

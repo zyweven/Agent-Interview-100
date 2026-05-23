@@ -64,7 +64,7 @@ import anthropic
 
 client = anthropic.Anthropic()
 response = client.messages.create(
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-4-5-20250929",
     max_tokens=1024,
     tools=tools,
     messages=[{"role": "user", "content": "北京现在多少度？"}]
@@ -95,8 +95,10 @@ result = get_weather(**tool_call.input)
 
 ```python
 # 将工具结果发回 LLM，让它生成最终回答
+# 注意：Anthropic tool_result 的 content 推荐直接传 string（即 LLM 看到的工具输出文本）
+# 把 dict 用 json.dumps 序列化只是把"展示给 LLM 的字符串"显式构造一次，并非协议要求
 final_response = client.messages.create(
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-4-5-20250929",
     max_tokens=1024,
     tools=tools,
     messages=[
@@ -106,7 +108,7 @@ final_response = client.messages.create(
             {
                 "type": "tool_result",
                 "tool_use_id": tool_call.id,
-                "content": json.dumps(result)
+                "content": f"温度: {result['temperature']}°C, 天气: {result['condition']}",
             }
         ]}
     ]
@@ -118,13 +120,13 @@ final_response = client.messages.create(
 
 | 维度 | OpenAI | Anthropic |
 |------|--------|-----------|
-| 参数名 | `functions` / `tools` | `tools` |
-| 请求格式 | `function_call` 对象 | `tool_use` content block |
-| 结果返回 | `function` role 消息 | `tool_result` content block |
+| 参数名 | `tools`（旧 `functions` 已 deprecated） | `tools` |
+| 请求格式 | `tool_calls` 数组（旧 `function_call` 已废弃，2023-11 起改名） | `tool_use` content block |
+| 结果返回 | `role: "tool"` 消息（旧 `role: "function"` 已废弃） | `tool_result` content block |
 | 并行调用 | 支持 `parallel_tool_calls` | 支持（多个 tool_use block） |
 | Schema 格式 | JSON Schema | JSON Schema（`input_schema`） |
 
-核心流程相同，API 格式不同。LangChain 等框架提供了统一抽象层。
+核心流程相同，API 格式不同。LangChain 等框架提供了统一抽象层。注意：OpenAI 自 2023-11 起将 `function_call` / `function` role 重命名为 `tool_calls` / `tool` role，旧字段仍向后兼容但官方推荐迁移。
 
 ### 单次 vs 多次工具调用
 

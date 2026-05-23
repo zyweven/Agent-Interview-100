@@ -170,4 +170,4 @@ class MemoryModule:
 - [Traditional Agent Architecture: Perceive, Reason, Act (AWS)](https://docs.aws.amazon.com/prescriptive-guidance/latest/agentic-ai-foundations/traditional-agents.html)
 - [The Architecture of Autonomous AI Agents (Deepak Gupta)](https://guptadeepak.com/the-rise-of-autonomous-ai-agents-a-comprehensive-guide-to-their-architecture-applications-and-impact/)
 - [Agentic AI Architecture: Types, Components, Best Practices (Exabeam)](https://www.exabeam.com/explainers/agentic-ai/agentic-ai-architecture-types-components-best-practices/)
-- [Agentic AI: Architectures, Taxonomies, and Evaluation (arXiv 2601.12560)](https://arxiv.org/html/2601.12560v1)
+- [A Survey of Agent Architectures (arXiv:2308.11432) — Wang et al.](https://arxiv.org/abs/2308.11432)

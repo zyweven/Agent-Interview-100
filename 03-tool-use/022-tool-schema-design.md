@@ -105,16 +105,16 @@
 
 ```python
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Literal
 import json
 
 class SearchParams(BaseModel):
     """在知识库中搜索文档"""
     query: str = Field(description="搜索关键词或自然语言问题")
-    category: Optional[str] = Field(
+    # Pydantic v2 推荐：用 Literal 表达枚举，自动转为 JSON Schema 的 enum
+    category: Optional[Literal["api_docs", "user_guide", "release_notes"]] = Field(
         default=None,
         description="文档类别",
-        json_schema_extra={"enum": ["api_docs", "user_guide", "release_notes"]}
     )
     max_results: int = Field(default=5, description="最大返回数量", ge=1, le=50)
 

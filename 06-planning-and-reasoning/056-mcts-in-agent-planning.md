@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-Monte Carlo Tree Search (MCTS) 是一种结合树搜索与随机模拟的决策算法，通过四步循环——**选择（Selection）、扩展（Expansion）、模拟（Simulation）、反向传播（Backpropagation）**——在庞大的决策空间中找到近似最优解。在 Agent 规划中，MCTS 将 LLM 的推理能力与系统化搜索结合，克服了 LLM 单次生成无法回溯的根本局限。代表性框架 **LATS（Language Agent Tree Search, ICML 2024）** 将 MCTS 应用于 LLM Agent，用 LLM 同时作为推理引擎、行动策略和价值函数，在 HumanEval 编程任务上达到 94.4%（GPT-4），超越了所有已知的 prompting 方法。MCTS 的核心优势是**探索-利用平衡**——既深入挖掘有前景的方案，又不忽略潜在的好路径。
+Monte Carlo Tree Search (MCTS) 是一种结合树搜索与随机模拟的决策算法，通过四步循环——**选择（Selection）、扩展（Expansion）、模拟（Simulation）、反向传播（Backpropagation）**——在庞大的决策空间中找到近似最优解。在 Agent 规划中，MCTS 将 LLM 的推理能力与系统化搜索结合，克服了 LLM 单次生成无法回溯的根本局限。代表性框架 **LATS（Language Agent Tree Search, ICML 2024）** 将 MCTS 应用于 LLM Agent，用 LLM 同时充当多个角色——**决策、生成、评估、反思**（其中 Self-Reflection 是核心创新），在 HumanEval 编程任务上达到 94.4%（GPT-4），超越了所有已知的 prompting 方法。MCTS 的核心优势是**探索-利用平衡**——既深入挖掘有前景的方案，又不忽略潜在的好路径。
 
 ## 详细解析
 
@@ -135,7 +135,9 @@ class LATS:
         for iteration in range(self.n_samples):
             node = self.select(root)
 
-            # LATS 的关键创新：LLM 同时充当三个角色
+            # LATS 的关键创新：LLM 同时充当多个角色（决策、生成、评估、反思）
+            # Self-Reflection 是 LATS 的核心创新之一，不应视为"额外"
+
             # 角色 1：Action Generator（生成候选动作）
             actions = await self.generate_actions(node)
 
@@ -150,7 +152,7 @@ class LATS:
                 value = await self.evaluate_state(child)
                 child.value = value
 
-            # 角色 4（额外）：Self-Reflection（从失败中学习）
+            # 角色 4：Self-Reflection（核心创新——从失败中学习并指导后续搜索）
             if self.is_terminal_failure(node):
                 reflection = await self.reflect_on_failure(node)
                 # 反思被存储，影响后续搜索

@@ -26,7 +26,7 @@
 
 ## 📖 目录结构
 
-### 一、🏛️ Agent 架构 (`01-agent-architecture/`) — 9 题
+### 一、🏛️ Agent 架构 (`01-agent-architecture/`) — 10 题
 
 Agent 系统的核心设计理念，从基本概念到生产级架构设计。
 
@@ -41,15 +41,15 @@ Agent 系统的核心设计理念，从基本概念到生产级架构设计。
 | 009 | [如何实现 Agent 的自我反思（Self-Reflection）和自我纠正？](01-agent-architecture/009-self-reflection-correction.md) |
 | 010 | [生产级 Agent 系统设计（含智能客服实战案例）](01-agent-architecture/010-production-agent-system-design.md) |
 | 108 | [面试追问链：从「什么是 Agent」到系统设计的 10 层递进追问](01-agent-architecture/108-interview-deep-dive-chain.md) |
+| 109 | [🆕 什么是 Agent Harness？与 Framework / Runtime 三层抽象有何区别？](01-agent-architecture/109-what-is-agent-harness.md) |
 
-### 二、🔍 RAG (`02-rag/`) — 10 题
+### 二、🔍 RAG (`02-rag/`) — 9 题
 
 检索增强生成的全链路知识，从文档处理到评估优化（含 Context Relevancy、MRR、MAP 等评估指标）。
 
 | # | 文章 |
 |---|------|
-| 011 | [什么是 RAG？它解决了 LLM 的哪些核心局限？](02-rag/011-what-is-rag.md) |
-| 012 | [RAG Pipeline 的核心组件：Indexing、Retrieval、Generation](02-rag/012-rag-pipeline-components.md) |
+| 011 | [RAG 概念、Pipeline 与组件总览](02-rag/011-rag-overview-and-pipeline.md) |
 | 013 | [文档分块（Chunking）策略有哪些？各有什么优缺点？](02-rag/013-chunking-strategies.md) |
 | 014 | [向量数据库选型：Pinecone vs Weaviate vs Chroma vs Milvus](02-rag/014-vector-database-comparison.md) |
 | 015 | [Embedding 模型选择与微调策略](02-rag/015-embedding-model-selection.md) |
@@ -93,7 +93,7 @@ LLM 与外部工具的交互，从 Function Calling 到安全管控。
 | 039 | [如何调试和监控多 Agent 系统？](04-multi-agent/039-debugging-monitoring-multi-agent.md) |
 | 101 | [🆕 A2A（Agent-to-Agent）协议是什么？它与 MCP 有何区别？](04-multi-agent/101-a2a-protocol.md) |
 
-### 五、🧠 记忆与状态 (`05-memory-and-state/`) — 8 题
+### 五、🧠 记忆与状态 (`05-memory-and-state/`) — 7 题
 
 Agent 的记忆管理，从上下文窗口到知识图谱。
 
@@ -104,8 +104,7 @@ Agent 的记忆管理，从上下文窗口到知识图谱。
 | 043 | [如何实现 Agent 的持久化记忆（Persistent Memory）？](05-memory-and-state/043-persistent-memory.md) |
 | 044 | [状态管理在 Agent 系统中的设计模式](05-memory-and-state/044-state-management-patterns.md) |
 | 045 | [如何实现跨会话的用户偏好学习？](05-memory-and-state/045-cross-session-preferences.md) |
-| 046 | [向量记忆 vs 结构化记忆：何时使用哪种？](05-memory-and-state/046-vector-vs-structured-memory.md) |
-| 047 | [设计 Agent 的知识图谱记忆系统](05-memory-and-state/047-knowledge-graph-memory.md) |
+| 046 | [长期记忆存储介质选型（向量/结构化/图谱）](05-memory-and-state/046-long-term-memory-storage.md) |
 | 048 | [记忆的遗忘与更新机制：如何处理过时信息？](05-memory-and-state/048-memory-forgetting-updating.md) |
 
 ### 六、🧩 规划与推理 (`06-planning-and-reasoning/`) — 9 题
@@ -124,7 +123,7 @@ LLM 的推理能力增强与任务规划策略。
 | 058 | [因果推理在 Agent 决策中的作用](06-planning-and-reasoning/058-causal-reasoning.md) |
 | 103 | [Agentic-RL 是什么？如何用 GRPO 训练 Agent 的决策能力？](06-planning-and-reasoning/103-agentic-rl-grpo.md) |
 
-### 七、✍️ 提示工程 (`07-prompt-engineering/`) — 11 题
+### 七、✍️ 提示工程 (`07-prompt-engineering/`) — 10 题
 
 Prompt 设计、优化与管理的最佳实践。
 
@@ -136,13 +135,12 @@ Prompt 设计、优化与管理的最佳实践。
 | 062 | [Agentic Prompting：如何编写让 LLM 自主执行任务的 Prompt？](07-prompt-engineering/062-agentic-prompting.md) |
 | 063 | [Prompt Chaining：多步骤 Prompt 的设计与编排](07-prompt-engineering/063-prompt-chaining.md) |
 | 064 | [如何防止 Prompt Injection 攻击？](07-prompt-engineering/064-prompt-injection-defense.md) |
-| 065 | [DSPy 等编程化 Prompt 优化工具的原理与使用](07-prompt-engineering/065-dspy-programmatic-prompting.md) |
+| 065 | [自动化 Prompt 优化：DSPy / APE / OPRO / PromptBreeder 全景](07-prompt-engineering/065-programmatic-prompt-optimization.md) |
 | 066 | [Prompt 版本管理与 A/B 测试](07-prompt-engineering/066-prompt-versioning-ab-testing.md) |
-| 067 | [Meta-Prompting：让 LLM 自动生成和优化 Prompt](07-prompt-engineering/067-meta-prompting.md) |
 | 068 | [跨模型 Prompt 迁移：如何编写模型无关的 Prompt？](07-prompt-engineering/068-cross-model-prompt-portability.md) |
 | 102 | [🆕 什么是 Context Engineering？它与 Prompt Engineering 有何本质区别？](07-prompt-engineering/102-context-engineering.md) |
 
-### 八、📊 评估 (`08-evaluation/`) — 8 题
+### 八、📊 评估 (`08-evaluation/`) — 9 题
 
 Agent 系统的评估方法、基准测试与可观测性。
 
@@ -156,6 +154,7 @@ Agent 系统的评估方法、基准测试与可观测性。
 | 075 | [评估工具对比：Ragas、LangSmith、Braintrust](08-evaluation/075-evaluation-tools-comparison.md) |
 | 076 | [静态 Benchmark 的陷阱：为什么 95% 准确率在生产中会失效？](08-evaluation/076-static-benchmark-trap.md) |
 | 077 | [如何构建持续评估（Continuous Evaluation）流水线？](08-evaluation/077-continuous-evaluation-pipeline.md) |
+| 111 | [🆕 Eval Harness 设计与生态选型：lm-evaluation-harness / Inspect AI / HELM / METR](08-evaluation/111-eval-harness-design.md) |
 
 ### 九、🛡️ 安全与对齐 (`09-safety-and-alignment/`) — 8 题
 
@@ -178,8 +177,7 @@ Agent 系统的安全风险防控与对齐策略。
 
 | # | 文章 |
 |---|------|
-| 086 | [LLMOps 是什么？与传统 MLOps 有何区别？](10-production-and-deployment/086-llmops-basics.md) |
-| 087 | [Agent 系统的基本部署架构](10-production-and-deployment/087-deployment-architecture.md) |
+| 086 | [LLMOps 与 Agent 部署架构](10-production-and-deployment/086-llmops-and-deployment.md) |
 | 088 | [LLM API 的成本优化策略](10-production-and-deployment/088-cost-optimization.md) |
 | 089 | [模型路由（Model Routing）：如何根据任务复杂度选择模型？](10-production-and-deployment/089-model-routing.md) |
 | 090 | [Agent 系统的延迟优化：Streaming、缓存、批处理](10-production-and-deployment/090-latency-optimization.md) |
@@ -190,8 +188,9 @@ Agent 系统的安全风险防控与对齐策略。
 | 095 | [Agent 系统的灾难恢复与高可用设计](10-production-and-deployment/095-disaster-recovery-ha.md) |
 | 104 | [🆕 场景题：你的 Agent 在生产环境出了故障，如何系统性排查和修复？](10-production-and-deployment/104-agent-production-troubleshooting.md) |
 | 107 | [🆕 代码 Review 题：找出这段 Agent 代码中的设计问题并修复](10-production-and-deployment/107-agent-code-review.md) |
+| 112 | [🆕 Agent Sandbox / Runtime 选型：E2B / Daytona / Modal / Cloudflare Sandbox 隔离强度 + cold start + egress](10-production-and-deployment/112-agent-sandbox-runtime.md) |
 
-### 十一、🧰 框架选型 (`11-frameworks/`) — 5 题
+### 十一、🧰 框架选型 (`11-frameworks/`) — 6 题
 
 主流 Agent 框架的对比分析与自研决策。
 
@@ -202,6 +201,7 @@ Agent 系统的安全风险防控与对齐策略。
 | 098 | [框架 vs 自研：什么时候应该自己构建 Agent 框架？](11-frameworks/098-framework-vs-custom.md) |
 | 099 | [OpenAI Assistants API vs Anthropic Claude Agent SDK 对比](11-frameworks/099-assistants-api-vs-claude-sdk.md) |
 | 100 | [如何设计可测试、可扩展的 Agent 框架抽象层？](11-frameworks/100-testable-extensible-framework.md) |
+| 110 | [🆕 主流 Coding Agent Harness 横评：Claude Code / Cursor / Aider / Cline / Codex CLI 在 Context / Tool / Permission / Sandbox 四维对比](11-frameworks/110-coding-agent-harness-comparison.md) |
 
 ---
 
@@ -225,23 +225,23 @@ Agent 系统的安全风险防控与对齐策略。
 
 | 模块 | 题数 | 简介 |
 |------|------|------|
-| 🏛️ Agent 架构 | 9 | Agent 定义、架构模式、循环设计与错误恢复、生产级系统设计（含实战案例）、面试追问链 |
-| 🔍 RAG | 10 | 检索增强生成全流程：文档分块、向量数据库、混合检索、Re-ranking、Agentic RAG、**评估指标与量化计算** |
+| 🏛️ Agent 架构 | 10 | Agent 定义、架构模式、循环设计与错误恢复、生产级系统设计（含实战案例）、面试追问链、Harness 三层抽象 |
+| 🔍 RAG | 9 | 检索增强生成全流程：文档分块、向量数据库、混合检索、Re-ranking、Agentic RAG、**评估指标与量化计算** |
 | 🔧 工具使用 | 10 | Function Calling、Tool Schema、MCP 协议、工具安全与动态发现 |
 | 🤝 多 Agent | 10 | 多 Agent 通信与编排模式、任务协调、Handoff、涌现行为、A2A 协议 |
-| 🧠 记忆与状态 | 8 | 短期/长期/工作记忆、上下文窗口管理与压缩、持久化记忆、知识图谱记忆 |
+| 🧠 记忆与状态 | 7 | 短期/长期/工作记忆、上下文窗口管理与压缩、持久化记忆、长期记忆存储介质选型 |
 | 🧩 规划与推理 | 9 | CoT/ToT 推理、任务分解、Plan-and-Solve 与动态重规划、MCTS、因果推理、Agentic-RL |
-| ✍️ 提示工程 | 11 | System Prompt 设计、结构化输出、Prompt Injection 防御、DSPy、Context Engineering |
-| 📊 评估 | 8 | 评估方法论（LLM→Agent）、LLM-as-Judge、Benchmark 设计、可观测性 |
+| ✍️ 提示工程 | 10 | System Prompt 设计、结构化输出、Prompt Injection 防御、自动化 Prompt 优化、Context Engineering |
+| 📊 评估 | 9 | 评估方法论（LLM→Agent）、LLM-as-Judge、Benchmark 设计、可观测性、Eval Harness 设计 |
 | 🛡️ 安全与对齐 | 8 | 安全风险、Guardrails、权限最小化、幻觉检测、Red Teaming |
-| 🚀 生产部署 | 12 | LLMOps、成本优化、模型路由、延迟优化、场景故障排查、代码 Review |
-| 🧰 框架选型 | 5 | LangChain/LlamaIndex/LangGraph 对比、框架 vs 自研决策、可扩展架构设计 |
+| 🚀 生产部署 | 12 | LLMOps、成本优化、模型路由、延迟优化、场景故障排查、代码 Review、Sandbox / Runtime 选型 |
+| 🧰 框架选型 | 6 | LangChain/LlamaIndex/LangGraph 对比、框架 vs 自研、Coding Agent Harness 横评 |
 
 ---
 
 ## 🆕 特色题型
 
-本项目在传统问答题的基础上，引入了 **5 种实践导向题型**，帮助你从不同角度深入理解 Agent 技术：
+本项目在传统问答题的基础上，引入了 **6 种实践导向题型**，帮助你从不同角度深入理解 Agent 技术：
 
 | 题型 | 代表题目 | 学习价值 |
 |------|---------|---------|
@@ -250,6 +250,7 @@ Agent 系统的安全风险防控与对齐策略。
 | 🏗️ **系统设计** | [#010](01-agent-architecture/010-production-agent-system-design.md) | 从原则到实战案例，完整体验 Agent 系统设计全过程 |
 | 🔍 **代码 Review** | [#107](10-production-and-deployment/107-agent-code-review.md) | 审查真实 Agent 代码中的问题，培养代码质量意识和最佳实践 |
 | 🔗 **递进追问链** | [#108](01-agent-architecture/108-interview-deep-dive-chain.md) | 10 层递进追问，从基础概念一步步深入到系统设计，串联知识体系 |
+| 🛠️ **Harness 主题** | [#109](01-agent-architecture/109-what-is-agent-harness.md)、[#110](11-frameworks/110-coding-agent-harness-comparison.md) | 2025-2026 Coding Agent 工程实践焦点，区分 Harness / Framework / Runtime 三层抽象 |
 
 ---
 
@@ -271,10 +272,10 @@ Week 2: 核心技能
 006 → 027 → 028 → 062 → 063 → 044 → 059
 
 Week 3: 生产实践
-086 → 087 → 090 → 092 → 026 → 104（场景题）→ 107（代码 Review）
+086 → 090 → 092 → 026 → 104（场景题）→ 107（代码 Review）→ 112（Sandbox/Runtime）
 
 Week 4: 进阶提升
-009 → 037 → 074 → 094 → 095 → 108（追问链）
+009 → 037 → 074 → 094 → 095 → 108（追问链）→ 109（Harness 抽象）
 ```
 
 #### 🔍 RAG 工程师（偏检索增强）
@@ -283,7 +284,7 @@ Week 4: 进阶提升
 
 ```
 Week 1: RAG 基础
-011 → 012 → 013 → 014 → 015
+011 → 013 → 014 → 015
 
 Week 2: RAG 进阶
 016 → 017 → 018 → 019 → 061
@@ -307,10 +308,10 @@ Week 2: 多 Agent 与编排
 031 → 033 → 034 → 036 → 037 → 101（A2A 协议）
 
 Week 3: 生产架构
-087 → 089 → 093 → 094 → 095
+086 → 089 → 093 → 094 → 095 → 112（Sandbox/Runtime）
 
 Week 4: 前沿技术
-055 → 103（Agentic-RL）→ 098 → 100 → 108（追问链）
+055 → 103（Agentic-RL）→ 098 → 100 → 108（追问链）→ 110（Coding Agent Harness 横评）
 ```
 
 #### 🛡️ AI 安全工程师（偏安全对齐）
@@ -343,7 +344,7 @@ Week 4: 评估与监控
 | 项目 | 描述 | 涉及问题 |
 |------|------|---------|
 | **tiny-agent-loop** | 从零实现一个最小 Agent 循环（50 行 Python），包含 Tool Calling、循环终止、错误处理 | #001 #006 #021 |
-| **tiny-rag** | 搭建简单 RAG 系统，支持文档分块、向量检索、Re-ranking | #011 #012 #013 #016 #017 |
+| **tiny-rag** | 搭建简单 RAG 系统，支持文档分块、向量检索、Re-ranking | #011 #013 #016 #017 |
 | **tiny-multi-agent** | 实现两个 Agent 的协作对话（Router + Worker 模式），体验 Handoff | #031 #033 #037 #101 |
 | **tiny-eval** | 用 Ragas 框架评估你的 RAG 系统，手算并验证评估指标 | #020 #069 #075 |
 | **tiny-mcp-server** | 实现一个 MCP Server，让 Agent 调用自定义工具 | #027 #029 #024 |

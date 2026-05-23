@@ -80,17 +80,16 @@ def get_user(user_id: str):
     # 参数化查询，防止 SQL 注入
     return db.execute("SELECT * FROM users WHERE id = %s", [user_id])
 
-# 防御层 2：如果必须用 Text-to-SQL，加白名单验证
-def validate_sql(query: str) -> bool:
-    parsed = sqlparse.parse(query)[0]
-    # 只允许 SELECT 语句
-    if parsed.get_type() != 'SELECT':
-        return False
-    # 禁止危险关键词
-    dangerous = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'EXEC']
-    if any(kw in query.upper() for kw in dangerous):
-        return False
-    return True
+# 防御层 2：如果必须用 Text-to-SQL，正确做法是在「执行层」用只读账号 + 数据库白名单
+# 注意：单靠 sqlparse 词法解析 + 关键词黑名单是被广泛证伪的——既容易误伤合法 SQL
+# （如列名/字符串里包含 DELETE），又漏掉 TRUNCATE/GRANT/MERGE/CALL/拼接子查询等手法。
+def safe_execute_readonly(query: str):
+    # 1. 只用「只读连接」执行——数据库账号仅有 SELECT 权限，写操作直接被 RDBMS 拒绝
+    with db.readonly_connection() as conn:
+        # 2. 加 statement_timeout 防止慢查询拖垮系统
+        conn.execute("SET statement_timeout = '5s'")
+        # 3. 强制只能查询白名单 schema/表（数据库级 row-level security 更可靠）
+        return conn.execute(query)
 ```
 
 ### 威胁 3：越权操作

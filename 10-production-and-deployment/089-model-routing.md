@@ -36,7 +36,7 @@ class RuleBasedRouter:
         if query.task_type == "translation":
             return "gpt-4o-mini"      # 翻译用小模型即可
         if query.task_type == "code_generation":
-            return "claude-sonnet-4-6"  # 代码生成用中端模型
+            return "claude-sonnet-4-5"  # 代码生成用中端模型
         if query.task_type == "complex_reasoning":
             return "o3"               # 复杂推理用最强模型
 
@@ -46,7 +46,7 @@ class RuleBasedRouter:
         elif len(query.text) < 2000:
             return "gpt-4o"
         else:
-            return "claude-sonnet-4-6"  # 长文本用大上下文模型
+            return "claude-sonnet-4-5"  # 长文本用大上下文模型
 
     # 优势：简单、快速、可预测
     # 劣势：规则维护成本高，无法处理边界情况
@@ -194,8 +194,11 @@ class MultiDimensionalRouter:
 
 ## 参考资料
 
-- [RouteLLM: Learning to Route LLMs with Preference Data (ICLR 2025)](https://www.marktechpost.com/2025/12/30/meet-llmrouter-an-intelligent-routing-system-designed-to-optimize-llm-inference-by-dynamically-selecting-the-most-suitable-model-for-each-query/)
+- [RouteLLM: Learning to Route LLMs with Preference Data (arXiv:2406.18665, ICLR 2025)](https://arxiv.org/abs/2406.18665)
+- [RouteLLM GitHub (lm-sys/RouteLLM)](https://github.com/lm-sys/RouteLLM)
 - [LLM Semantic Router: Intelligent Request Routing (Red Hat)](https://developers.redhat.com/articles/2025/05/20/llm-semantic-router-intelligent-request-routing)
 - [Task-Based LLM Routing: Optimizing LLM Performance (Portkey)](https://portkey.ai/blog/task-based-llm-routing/)
 - [Intelligent LLM Routing: How Multi-Model AI Cuts Costs by 85% (Swfte AI)](https://www.swfte.com/blog/intelligent-llm-routing-multi-model-ai)
 - [What is LLM Router? (TrueFoundry)](https://www.truefoundry.com/blog/what-is-llm-router)
+
+> ⚠️ 注：marktechpost 的 "LLMRouter" 文章介绍的是另一个不同系统（同名混淆），与 ICLR 2025 的 RouteLLM 不是同一项目，使用时请优先引用 arXiv 原文和官方仓库。

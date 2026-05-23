@@ -57,7 +57,7 @@ class SelfRAG:
         return response
 ```
 
-**关键优势：** 根据 Asai et al. (2023) 论文（ICLR 2024 Oral）在 Open-domain QA、推理和事实验证等六类任务上的实验，Self-RAG（7B/13B）显著优于 ChatGPT 和 retrieval-augmented Llama2-chat，并将幻觉率从基线模型的 15-20% 降至约 2%。在医疗、法律、金融等高精度需求场景尤为有价值。
+**关键优势：** 根据 Asai et al. (2023) 论文（ICLR 2024 Oral）在 Open-domain QA、推理和事实验证等六类任务上的实验，Self-RAG（7B/13B）显著优于 ChatGPT 和 retrieval-augmented Llama2-chat，事实性指标在多个任务上取得 SOTA。在医疗、法律、金融等高精度需求场景尤为有价值。
 
 **局限：** 需要用特殊 token 对模型进行微调，不能直接用于现有 API 模型。
 

@@ -105,6 +105,7 @@ roles = {
 # policy.rego
 """
 package tool_access
+import rego.v1  # OPA 1.0+ 必需；老版本用 import future.keywords.in
 
 default allow = false
 

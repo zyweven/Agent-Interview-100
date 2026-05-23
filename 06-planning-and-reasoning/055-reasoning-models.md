@@ -83,14 +83,18 @@ emergent_behaviors = {
 └──────────────────┴──────────┴─────────┘
 
 编程（Codeforces Rating）：
-┌──────────────────┬──────────┐
-│ 模型             │ Rating   │
-├──────────────────┼──────────┤
-│ GPT-4            │ ~1200    │
-│ o1               │ ~1800    │
-│ DeepSeek-R1      │ ~1500    │
-│ o3               │ ~2700    │
-└──────────────────┴──────────┘
+┌─────────────────────────────────┬──────────┐
+│ 模型                            │ Rating   │
+├─────────────────────────────────┼──────────┤
+│ GPT-4                           │ ~1200    │
+│ DeepSeek-R1-Distill-Qwen-32B    │ ~1500    │
+│ o1                              │ ~1800    │
+│ DeepSeek-R1（满血 671B）         │ ~2029    │
+│ o3                              │ ~2700    │
+└─────────────────────────────────┴──────────┘
+
+注：1500 是 DeepSeek-R1 蒸馏小模型的水平，**满血 DeepSeek-R1 实际 ~2029**（与原论文对应）。
+   常见误传把蒸馏版数字按到满血版上，会显著低估 R1 的真实编程能力。
 
 ARC-AGI（抽象推理）：
   GPT-4: ~5%  →  o3: 87.5%（高计算配置下，标准配置约 75.7%；突破性提升）
@@ -169,6 +173,54 @@ Agent Router：
 延迟对比：
   标准模型：1-5 秒
   Reasoning 模型：10-120 秒（取决于问题复杂度）
+```
+
+### 2025-2026 Reasoning 模型生态演进
+
+```python
+# 主流 Reasoning 模型谱系（按 2026-05 时间线）
+reasoning_models_2025_2026 = {
+    "OpenAI o 系列": {
+        "o1 / o1-pro":    "2024-09 / 12 闭源 RL CoT，开启 test-time compute scaling",
+        "o3 / o3-mini":   "2025-01 推理 + 工具调用，ARC-AGI 87.5%",
+        "o3-pro / o4":    "2025-09 / 2026-Q1 进一步扩 test-time scaling",
+        "GPT-5 / 5.3":    "2026-Q1+ 推理 + 通用合一，但仍可显式开 'thinking' 模式",
+    },
+    "Anthropic Claude (extended thinking)": {
+        "Sonnet 3.7":     "2025-02 首个支持 extended thinking 的 Claude，budget_tokens 控制思考深度",
+        "Sonnet 4 / 4.5": "2025-05 / 09 改进 thinking + 工具交错，引入 interleaved thinking",
+        "Opus 4 / 4.5":   "2025-05 / 09 推理 + Agent 长任务",
+        "Sonnet 4.6 / Opus 4.6": "2025-Q4 1M context + server-side compaction，长思考链稳定性大幅提升",
+        "Opus 4.7 / Mythos": "2026-05 SWE-bench Verified 87.6% / 93.9%（含 thinking）",
+    },
+    "DeepSeek 系列": {
+        "R1 / R1-Zero":   "2025-01 纯 GRPO RL 开源旗舰，Aha moment 涌现",
+        "R1-蒸馏 7B/14B/32B/70B": "蒸馏到小模型，1.5B 也能跑出可观推理能力",
+        "V3.x / R2":      "2025-2026 持续迭代，强化 agent 任务",
+    },
+    "Google Gemini": {
+        "2.5 Pro Thinking": "2025-Q2 引入 'Deep Think' 模式，AIME / HLE 显著提升",
+        "3.0 / 3.1 Thinking": "2026-Q1-Q2 多模态 + 推理融合，HLE SOTA 4x.x%",
+    },
+    "xAI Grok": {
+        "Grok 3 Reasoning / Grok 3 Heavy": "2025-Q1 推理模式 + 多 agent 重思考",
+        "Grok 4":                          "2025-2026 推理 + 工具",
+    },
+    "Qwen / 其他": {
+        "QwQ-32B-Preview":  "阿里 2024-11 开源 reasoning，长 CoT 风格独特",
+        "Qwen3-Thinking":   "2025-Q2 Qwen3 系列内置 thinking",
+        "Mistral / Moonshot Kimi K2 / GLM-4-Reasoning": "2025-2026 各家陆续推出",
+    },
+}
+
+# 设计模式归纳
+design_axes = {
+    "RL 信号":     "可验证奖励（数学/代码）已成共识；偏好/Judge 奖励作补充",
+    "思考预算":     "从'固定开关'演化为 budget_tokens / minimum_thinking_tokens 可控",
+    "Interleaved": "思考与工具调用交错（Claude / OpenAI Responses 都已支持）",
+    "Thinking 可见性": "OpenAI 默认隐藏 raw CoT，Anthropic / DeepSeek 默认可见，影响安全/可审计权衡",
+    "成本范式":     "thinking token 计费独立，预算控制成生产关键参数",
+}
 ```
 
 ### Reasoning 模型在 Agent 中的应用

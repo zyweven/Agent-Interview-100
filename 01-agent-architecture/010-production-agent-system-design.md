@@ -113,9 +113,9 @@ class ModelRouter:
         if complexity < 0.3:
             return "claude-haiku-4-5-20251001"   # 简单任务用小模型
         elif complexity < 0.7:
-            return "claude-sonnet-4-20250514"     # 中等任务用中等模型
+            return "claude-sonnet-4-5-20250929"  # 中等任务用中等模型
         else:
-            return "claude-opus-4-20250514"       # 复杂任务用强模型
+            return "claude-opus-4-7-20251015"    # 复杂任务用强模型
 ```
 
 ##### 语义缓存

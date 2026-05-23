@@ -268,7 +268,7 @@ def mean_average_precision(queries: list[list[bool]]) -> float:
 
 # 示例数据
 q1 = [True, False, True, False, False, True]   # AP = 0.722
-q2 = [False, True, False, False, True, False]   # AP = 0.500
+q2 = [False, True, False, True, False, False]   # AP = 0.500
 
 print(f"AP(Q1) = {average_precision(q1):.3f}")  # 0.722
 print(f"AP(Q2) = {average_precision(q2):.3f}")  # 0.500

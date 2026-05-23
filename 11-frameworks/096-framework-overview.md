@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-2025 年 AI Agent 框架呈现三足鼎立格局：**LangChain** 是最全能的"瑞士军刀"——生态最大、功能最全、社区最活跃（GitHub 100k+ Stars），适合快速原型和复杂 Agent 编排，但抽象层多、学习曲线陡；**LlamaIndex** 是"数据专家"——专注于数据连接和 RAG，提供 160+ 数据源连接器，在检索场景下性能最优（检索速度最快），适合知识密集型应用；**Haystack** 是"生产派"——由 deepset 开发，Pipeline 架构清晰、模块化程度高，企业级生产部署最成熟（99.9% 可用性），适合需要稳定运行的生产环境。选择建议：快速原型+复杂 Agent → LangChain；数据密集型 RAG → LlamaIndex；生产稳定性优先 → Haystack。实际项目中三者并非互斥——LlamaIndex 可作为 LangChain 的检索后端，Haystack 的 Pipeline 可集成 LangChain 组件。2025 年新兴框架如 CrewAI（多 Agent 编排）、Semantic Kernel（微软企业级）、Agno（极速轻量）也在快速崛起。
+2025 年 AI Agent 框架呈现三足鼎立格局：**LangChain** 是最全能的"瑞士军刀"——生态最大、功能最全、社区最活跃（GitHub 100k+ Stars），适合快速原型和复杂 Agent 编排，但抽象层多、学习曲线陡；**LlamaIndex** 是"数据专家"——专注于数据连接和 RAG，提供 160+ 数据源连接器，在检索场景下性能最优（检索速度最快），适合知识密集型应用；**Haystack** 是"生产派"——由 deepset 开发，Pipeline 架构清晰、模块化程度高，适合需要稳定运行的企业级生产部署。选择建议：快速原型+复杂 Agent → LangChain；数据密集型 RAG → LlamaIndex；生产稳定性优先 → Haystack。实际项目中三者并非互斥——LlamaIndex 可作为 LangChain 的检索后端，Haystack 的 Pipeline 可集成 LangChain 组件。2025 年新兴框架如 CrewAI（多 Agent 编排）、Semantic Kernel（微软企业级）、Agno（极速轻量）也在快速崛起。
 
 ## 详细解析
 
@@ -36,14 +36,13 @@
 
 ### LangChain 核心架构
 
-> **注意**：以下使用的 `create_tool_calling_agent` + `AgentExecutor` 是旧版 API。LangChain 官方现在更推荐使用 LangGraph 的 `create_react_agent` 来构建 Agent。
+> **注意**：LangChain **1.0 已 GA**（2025-10），官方推荐使用 `langchain.agents.create_agent` 构建 Agent；旧版 `create_tool_calling_agent` + `AgentExecutor` 以及 LangGraph 的 `create_react_agent` 都已 deprecated。下方示例使用 1.0 API。
 
 ```python
-# LangChain：链式编排 + Agent + 工具生态（旧版 API 示例）
+# LangChain 1.0：create_agent + 中间件架构（推荐 2025-10+）
+from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
-from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.tools import tool
-from langchain_core.prompts import ChatPromptTemplate
 
 # 定义工具
 @tool
@@ -51,16 +50,15 @@ def search_database(query: str) -> str:
     """搜索产品数据库"""
     return f"找到关于 {query} 的 3 条结果"
 
-# 创建 Agent
-llm = ChatOpenAI(model="gpt-4o")
-prompt = ChatPromptTemplate.from_messages([
-    ("system", "你是一个智能助手。"),
-    ("human", "{input}"),
-    ("placeholder", "{agent_scratchpad}"),
-])
+# 创建 Agent（1.0 API，单行即可）
+agent = create_agent(
+    model=ChatOpenAI(model="gpt-4o"),
+    tools=[search_database],
+    system_prompt="你是一个智能助手。",
+)
 
-agent = create_tool_calling_agent(llm, [search_database], prompt)
-executor = AgentExecutor(agent=agent, tools=[search_database])
+# 调用
+result = agent.invoke({"messages": [("human", "搜索 RAG 框架")]})
 
 # LangChain 优势：
 # 1. 生态最大——几乎所有 LLM、向量数据库、工具都有集成

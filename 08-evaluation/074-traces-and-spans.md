@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-Trace 和 Span 是分布式追踪（Distributed Tracing）的核心概念，被引入 LLM/Agent 系统用于实现**执行可观测性**——理解 Agent "做了什么、花了多久、哪里出了问题"。**Trace** 代表一次完整的 Agent 执行（从接收任务到返回结果），**Span** 代表 Trace 中的一个操作单元（如一次 LLM 调用、一次工具调用、一次检索）。Span 之间有父子关系，形成树形结构，清晰展示 Agent 的决策链。**OpenTelemetry (OTel)** 已成为 LLM 可观测性的行业标准——2025 年 OTel 官方发布了 AI Agent 可观测性规范，定义了 GenAI 相关的语义约定（`gen_ai.system`、`gen_ai.request.model` 等属性）。主流工具（Langfuse、LangSmith、Arize Phoenix）都支持 OTel 集成。
+Trace 和 Span 是分布式追踪（Distributed Tracing）的核心概念，被引入 LLM/Agent 系统用于实现**执行可观测性**——理解 Agent "做了什么、花了多久、哪里出了问题"。**Trace** 代表一次完整的 Agent 执行（从接收任务到返回结果），**Span** 代表 Trace 中的一个操作单元（如一次 LLM 调用、一次工具调用、一次检索）。Span 之间有父子关系，形成树形结构，清晰展示 Agent 的决策链。**OpenTelemetry (OTel)** 是 LLM 可观测性的主流方向——OTel GenAI Special Interest Group 维护的 **Semantic Conventions for Generative AI** 截至 2026-05 仍处于 **Development 阶段（尚未 Stable）**，定义了 GenAI 相关的语义约定（`gen_ai.system`、`gen_ai.request.model` 等属性）。主流工具（Langfuse、LangSmith 2026-01 起 end-to-end native OTel、Arize Phoenix）都已支持，但 API 名字可能在 GA 前微调，生产接入建议固定到具体语义版本。
 
 ## 详细解析
 
@@ -113,7 +113,7 @@ class ObservableAgent:
 otel_genai_attributes = {
     # 系统信息
     "gen_ai.system": "openai / anthropic / google",
-    "gen_ai.request.model": "gpt-4o / claude-sonnet-4-6",
+    "gen_ai.request.model": "gpt-4o / claude-sonnet-4-5",
 
     # 请求参数
     "gen_ai.request.temperature": 0.7,

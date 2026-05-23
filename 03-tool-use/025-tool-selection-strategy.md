@@ -74,7 +74,7 @@ system_prompt = """你可以使用以下工具：
 
 ```python
 response = client.messages.create(
-    model="claude-sonnet-4-20250514",
+    model="claude-sonnet-4-5-20250929",
     tools=[tool_a, tool_b, tool_c],  # 声明可用工具
     tool_choice={"type": "auto"},     # 让模型自动决定
     # tool_choice={"type": "tool", "name": "specific_tool"},  # 强制指定

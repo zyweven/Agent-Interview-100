@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-权限最小化（Least Privilege）和沙箱执行（Sandboxing）是 Agent 安全的两大核心工程实践。**权限最小化**要求 Agent 只拥有完成当前任务所需的最小权限集——不给数据库写权限给只需要读的 Agent，不给全网访问给只需要调特定 API 的 Agent。**沙箱执行**则是将 Agent 的代码执行、文件操作等高危行为隔离在受限环境中，即使 Agent 被攻击也无法影响宿主系统。2025 年的关键趋势：传统的静态权限模型不适合 Agent——因为 Agent 在运行时动态决定行为，需要**动态运行时权限管理**（如 AI Identity Gateway，为每次请求颁发最小权限令牌）。OWASP Agent 安全清单将"工具滥用与权限提升"列为核心威胁。实际案例：Devin AI Agent 被间接 Prompt Injection 攻击，泄露了环境变量和密钥。防御架构：权限策略即代码（OPA）+ 临时性执行环境（gVisor/microVM）+ 出口白名单 + 人工审批高危操作。
+权限最小化（Least Privilege）和沙箱执行（Sandboxing）是 Agent 安全的两大核心工程实践。**权限最小化**要求 Agent 只拥有完成当前任务所需的最小权限集——不给数据库写权限给只需要读的 Agent，不给全网访问给只需要调特定 API 的 Agent。**沙箱执行**则是将 Agent 的代码执行、文件操作等高危行为隔离在受限环境中，即使 Agent 被攻击也无法影响宿主系统。2025 年的关键趋势：传统的静态权限模型不适合 Agent——因为 Agent 在运行时动态决定行为，需要**动态运行时权限管理**（如 AI Identity Gateway，为每次请求颁发最小权限令牌）。OWASP Agent 安全清单将"工具滥用与权限提升"列为核心威胁。实际案例：Devin AI Agent 被间接 Prompt Injection 攻击，泄露了环境变量和密钥（Johann Rehberger 在 "Month of AI Bugs" 系列中披露，2025-08）。防御架构：权限策略即代码（OPA）+ 临时性执行环境（gVisor/microVM）+ 出口白名单 + 人工审批高危操作。
 
 ## 详细解析
 
@@ -216,7 +216,7 @@ class EgressControl:
 
 ## 常见误区 / 面试追问
 
-1. **误区："给 Agent 全部权限，让它自己判断用哪些"** — 这是最危险的做法。Agent 被 Prompt Injection 攻击后，它的"判断"会被攻击者控制。权限必须在 Agent 外部强制执行（外部策略引擎），而非依赖 Agent 自身的安全判断。Meta 的"Agents Rule of Two"原则：安全护栏必须在 LLM 外部。
+1. **误区："给 Agent 全部权限，让它自己判断用哪些"** — 这是最危险的做法。Agent 被 Prompt Injection 攻击后，它的"判断"会被攻击者控制。权限必须在 Agent 外部强制执行（外部策略引擎），而非依赖 Agent 自身的安全判断。**Meta 的"Agents Rule of Two"（2025-10）**：在 prompt injection 检测尚不可靠之前，单个 Agent 会话不应同时具备 **[A] 处理不可信输入、[B] 访问敏感数据、[C] 能改变状态/对外通信** 这三个能力——最多同时具备其中两个。如果业务必须三者俱全（如 Coding Agent），应：(1) 拆分为两阶段会话（先采集→人工审批→再执行）；(2) 用沙箱完全阻断 [C]；(3) 加可信内容过滤器降低 [A] 风险。该原则源于 Simon Willison 的"致命三角"（详见 078 题），是当前业界最具可操作性的 Agent 安全设计准则。
 
 2. **误区："沙箱会严重影响性能"** — 现代容器化和 microVM 技术（如 Firecracker）启动延迟已降到毫秒级。gVisor 的性能开销在大多数场景下 < 10%。对于 Agent 系统来说，LLM 调用本身的延迟（1-5 秒）远大于沙箱开销。
 

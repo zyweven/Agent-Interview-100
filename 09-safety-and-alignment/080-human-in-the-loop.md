@@ -141,8 +141,11 @@ class AsyncEscalation:
 ### LangGraph HITL 实现
 
 ```python
+# 关键点：interrupt() 不是同步函数！它会抛出特殊异常暂停图执行，
+# 必须配合 Checkpointer + Command(resume=...) 才能正常工作
 from langgraph.graph import StateGraph
-from langgraph.types import interrupt
+from langgraph.types import interrupt, Command
+from langgraph.checkpoint.memory import MemorySaver
 
 def agent_node(state):
     """Agent 决策节点"""
@@ -150,15 +153,17 @@ def agent_node(state):
     return {"messages": [result], "pending_action": result.tool_calls}
 
 def human_review_node(state):
-    """人工审核节点——使用 interrupt() 暂停"""
+    """人工审核节点——interrupt() 暂停并把 value 透传给外部"""
     action = state["pending_action"]
 
-    # 暂停图执行，等待人类输入
+    # interrupt 抛 GraphInterrupt 异常，invoke() 会立即返回
+    # 外部拿到 interrupt value 后，由人决定，再用 Command(resume=...) 重新 invoke
     human_decision = interrupt({
         "action": action,
         "question": f"Agent 想要执行: {action}，是否批准？",
     })
 
+    # 当 Command(resume=...) 注入后，interrupt 返回这个 value，继续往下执行
     if human_decision["approved"]:
         return {"approved": True}
     else:
@@ -171,13 +176,26 @@ def should_review(state):
         return "human_review"
     return "execute"
 
-# 构建图
+# 必须配置 checkpointer，否则 interrupt 之后无法恢复
+checkpointer = MemorySaver()
 graph = StateGraph()
 graph.add_node("agent", agent_node)
 graph.add_node("human_review", human_review_node)
 graph.add_node("execute", execute_node)
 graph.add_conditional_edges("agent", should_review)
 graph.add_edge("human_review", "execute")
+app = graph.compile(checkpointer=checkpointer)
+
+# 第一次 invoke——执行到 interrupt 处暂停
+config = {"configurable": {"thread_id": "session-1"}}
+result = app.invoke({"messages": [...]}, config=config)
+# result 包含 __interrupt__ 字段，外部 UI 据此展示审批表单
+
+# 人工审批后——用 Command(resume=...) 把决策注入回去
+final = app.invoke(
+    Command(resume={"approved": True}),  # 此 dict 即 interrupt() 的返回值
+    config=config,  # 必须用同一 thread_id 让 checkpointer 恢复状态
+)
 ```
 
 ### 决策框架

@@ -227,7 +227,7 @@ class DynamicUserProfile:
 - 结果：更高的任务成功率、更高效的交互、更少的用户纠正
 - 基于 RL 的框架训练 Agent 生成更全面的反思和更有效的记忆更新
 
-此外，**[Memory-R1](https://arxiv.org/abs/2508.19828)** 进一步验证了 RL 在记忆管理中的有效性——它通过强化学习训练 Memory Manager（学习 ADD/UPDATE/DELETE 操作）和 Answer Agent（学习检索和推理），仅用 152 条训练样本即在多个长期记忆基准上超越 Mem0 等强基线。
+此外，**[Memory-R1](https://arxiv.org/abs/2508.19828)** 进一步验证了 RL 在记忆管理中的有效性——它通过强化学习训练 Memory Manager（学习 **ADD / UPDATE / DELETE / NOOP** 四种操作；NOOP 表示"当前事件不值得改动记忆库"，避免对无信息量的对话强行写入）和 Answer Agent（学习检索和推理），仅用 152 条训练样本即在多个长期记忆基准上超越 Mem0 等强基线。
 
 ## 常见误区 / 面试追问
 

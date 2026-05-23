@@ -236,7 +236,7 @@ Agent Loop（自主决策循环）：
 
 3. **追问："如何处理链中某一步失败？"** — 三种策略：(1) 重试当前步骤（带指数退避）；(2) 跳过当前步骤使用默认值；(3) 回退到上一步用不同方式重试。选择哪种取决于该步骤的关键程度。
 
-4. **追问："Prompt Chaining 和 LangChain 的 Chain 是什么关系？"** — LangChain 的 Chain（现已被 LCEL/LangGraph 取代）是 Prompt Chaining 设计模式的框架级实现。但 Prompt Chaining 是通用设计模式，可以用任何语言/框架实现，不依赖 LangChain。
+4. **追问："Prompt Chaining 和 LangChain 的 Chain 是什么关系？"** — LangChain 的 `LLMChain` / `SequentialChain` 等老 Chain 类已被 **LCEL（LangChain Expression Language）** 替代——LCEL 是新一代的"链表达式"运行时，提供 streaming / async / parallel / fallback 等原语，本质仍是 Prompt Chaining 模式的语法升级。**LangGraph 则是不同抽象层级**：它是面向 Agent 的有状态图引擎（state + node + edge + checkpointer），用于建模带循环和条件路由的复杂控制流，而不是 Chain 的替代品。简言之：LCEL ≈ "新的 Chain"，LangGraph ≈ "更上层的 Agent 编排"。Prompt Chaining 是通用设计模式，可以用任何语言/框架实现，不依赖 LangChain。
 
 ## 参考资料
 

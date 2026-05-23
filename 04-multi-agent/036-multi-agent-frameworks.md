@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-三大多 Agent 框架各有侧重：**CrewAI** 以角色为核心，用 Crew（团队）+ Flow（流程）两层架构实现快速搭建，适合业务流程自动化和快速原型；**LangGraph** 以图为核心，用节点-边-状态机实现精确的流程控制，可追踪可调试，适合复杂生产系统；**AutoGen**（Microsoft Research）以对话为核心，Agent 通过自然语言消息协作，最灵活但最难调试，适合群体决策和辩论场景。选择原则：需要快速上手选 CrewAI，需要精确控制选 LangGraph，需要灵活对话选 AutoGen。
+三大多 Agent 框架各有侧重：**CrewAI** 以角色为核心，用 Crew（团队，自治协作）+ Flow（流程，deterministic 生产级编排）两层架构覆盖原型到生产；**LangGraph** 以图为核心，用节点-边-状态机实现精确的流程控制，可追踪可调试，适合复杂生产系统；**AutoGen** 系列（Microsoft 体系）以对话/事件驱动为核心，但现状是三个不同项目并存：**AG2**（ag2ai/ag2，社区 fork，AutoGen 0.2 延续）、**AutoGen 0.4+**（微软 2025-01 重写，actor 模型）已进入维护模式、微软新主推 **Microsoft Agent Framework (MAF)**。选择原则：需要快速上手选 CrewAI，需要精确控制选 LangGraph，需要群体对话/事件驱动选 AG2/AutoGen 0.4，需要微软最新生态选 MAF。
 
 ## 详细解析
 
@@ -13,16 +13,17 @@
 
 ```
 CrewAI:  角色驱动 —— "谁做什么"
-         Crew（团队）= Agent + Task + Process
-         Flow（流程）= 确定性任务编排
+         Crew（团队）= Agent + Task + Process（自治协作）
+         Flow（流程）= deterministic 生产级编排（事件驱动 + state 持久化）
 
 LangGraph: 图驱动 —— "怎么流转"
            Graph = Node + Edge + State
            支持条件分支、循环、并行
 
-AutoGen:  对话驱动 —— "怎么讨论"
-          GroupChat = Agent + Message + Orchestration
-          Agent 通过对话自然协作
+AutoGen 体系（三个不同项目，常被混淆）:
+  AG2 (ag2ai/ag2)        : 2024-11 社区 fork，AutoGen 0.2 延续
+  AutoGen 0.4+ (microsoft): 2025-01 微软重写，event-driven actor 架构，已进入维护
+  MAF (Microsoft Agent Framework): 2025-2026 微软新主推，正式取代 AutoGen
 ```
 
 ### 架构详解
@@ -63,7 +64,7 @@ write_task = Task(
 crew = Crew(
     agents=[researcher, writer],
     tasks=[research_task, write_task],
-    process=Process.sequential  # 或 Process.hierarchical
+    process=Process.sequential  # 注：Process.hierarchical 已不主推，复杂层级编排建议改用 Flow
 )
 
 result = crew.kickoff(inputs={"topic": "AI Agent"})
@@ -111,9 +112,14 @@ graph.add_edge("revise", "write")  # 循环
 app = graph.compile()
 ```
 
-#### AutoGen
+#### AutoGen / AG2 / MAF
 
-> **注意**：以下代码示例对应 AutoGen 0.2.x 版本 API。0.4+（AG2）已重构 API，import 路径变为 `from autogen_agentchat.agents import AssistantAgent` 等。
+> **重要**：这是三个不同项目，import 路径与 API 都不同：
+> - **AG2**（社区 fork，AutoGen 0.2.x 延续）：`from autogen import ConversableAgent`
+> - **AutoGen 0.4+**（微软重写，event-driven actor 模型）：`from autogen_agentchat.agents import AssistantAgent`
+> - **MAF**（Microsoft Agent Framework，微软 2025-2026 新主推）：`from agent_framework import ChatAgent`（取代 AutoGen）
+>
+> 以下代码示例对应 **AG2 / AutoGen 0.2.x** API（最易上手），实际新项目建议优先 AutoGen 0.4+ 或 MAF。
 
 ```python
 from autogen import ConversableAgent
@@ -151,17 +157,17 @@ researcher.initiate_chat(manager, message="研究 AI Agent 的最新趋势")
 
 ### 核心维度对比
 
-| 维度 | CrewAI | LangGraph | AutoGen |
+| 维度 | CrewAI | LangGraph | AG2 / AutoGen 0.4 / MAF |
 |------|--------|-----------|---------|
-| **核心抽象** | 角色/团队 | 图/状态机 | 对话/消息 |
-| **学习曲线** | 低 | 高 | 中 |
-| **流程控制** | 顺序/层级 | 任意图（条件、循环、并行） | 对话驱动 |
-| **状态管理** | 内置简单状态 | 精细状态 + Reducer | 对话历史 |
+| **核心抽象** | 角色/团队 | 图/状态机 | 对话/消息（AG2）、actor（0.4）、ChatAgent（MAF） |
+| **学习曲线** | 低 | 高 | 中（AG2）、中高（0.4） |
+| **流程控制** | Crew 顺序/Flow 事件驱动 | 任意图（条件、循环、并行） | 对话/事件驱动 |
+| **状态管理** | 内置 state + Flow 持久化 | 精细状态 + Reducer | 对话历史/actor 状态 |
 | **调试性** | 中 | 高（图可视化） | 低（非确定性对话） |
-| **生产就绪度** | 中 | 高（Klarna、Replit 使用） | 中（v0.4 仍在稳定） |
-| **工具生态** | 中 | 300+ 集成 + LangSmith | Azure AI 集成 |
+| **项目状态** | 活跃迭代 | 活跃迭代（1.0 GA） | AG2 社区活跃；AutoGen 0.4 已进入维护；MAF 新主推 |
+| **工具生态** | 中 | 300+ 集成 + LangSmith | Azure AI / Semantic Kernel 集成 |
 | **Human-in-Loop** | 支持 | 原生支持 | 原生支持 |
-| **配置方式** | YAML 驱动 | 代码驱动 | 代码/Studio GUI |
+| **配置方式** | 代码 + YAML 双轨 | 代码驱动 | 代码/Studio GUI |
 
 ### 各框架最佳适用场景
 
@@ -177,10 +183,15 @@ framework_guide = {
         "需要条件分支和循环的工作流",
         "对可观测性要求高的企业应用",
     ],
-    "AutoGen": [
-        "群体决策和多 Agent 辩论",
+    "AG2 / AutoGen 0.4": [
+        "群体决策和多 Agent 辩论（AG2 ConversableAgent / GroupChat）",
+        "高并发事件驱动场景（AutoGen 0.4 actor 模型）",
         "研究探索和创意生成",
-        "Microsoft/Azure 生态的项目",
+    ],
+    "MAF (Microsoft Agent Framework)": [
+        "微软 2025-2026 主推方向，正式取代 AutoGen",
+        "Azure AI Foundry / Semantic Kernel 深度集成",
+        "企业级 Agent 平台（Microsoft 生态新项目优先）",
     ],
 }
 ```

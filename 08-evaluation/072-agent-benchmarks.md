@@ -52,14 +52,25 @@ Agent 基准分类：
 # SWE-bench：代码 Agent 的标杆基准
 swe_bench = {
     "任务": "给定一个真实的 GitHub Issue，修改代码库使相关测试通过",
-    "来源": "12 个流行 Python 开源项目的真实 Issue",
-    "规模": "2294 个 Issue（Verified 子集 500 个）",
+    "来源": "12 个流行 Python 开源项目（Django 占比 ~37%，存在领域倾斜）",
+    "规模": "2294 个 Issue 主集 + 多个家族变体",
+    "家族变体": {
+        "SWE-bench Verified": "500 题，OpenAI 联合 Anthropic 等人工验证子集",
+        "SWE-bench Lite": "300 题，研究入门用",
+        "SWE-bench Multimodal": "517 题，含 UI 截图（防纯文本作弊）",
+        "SWE-bench Pro": "2026 抗污染版本，人工严格审查",
+        "SWE-bench Live": "持续收集最新 Issue（不在训练集）",
+        "Multi-SWE-bench": "扩展到 Go/Rust/TypeScript/Java 等 7 语言",
+    },
     "评估": "自动化——运行项目测试套件",
     "难度": "非常高——需要理解大型代码库、定位 bug、编写修复",
 
     "评估指标": {
         "Resolved Rate": "成功修复的 Issue 比例",
-        "当前 SOTA": "约 72%（SWE-bench Verified）",
+        "当前 SOTA (2026-05)": (
+            "≥90%（Claude Mythos Preview 93.9%, "
+            "Claude Opus 4.7 87.6%, Claude Sonnet 4.5 80.9%）"
+        ),
     },
 
     "为什么重要": [
@@ -71,21 +82,57 @@ swe_bench = {
 }
 ```
 
+**⚠️ 2026 重要演进：SWE-bench Verified 已被官方判定"严重污染"**
+
+```
+OpenAI 2026-02 公开声明（详见 SWE-bench Pro 发布说明）：
+- SWE-bench Verified "increasingly contaminated"
+- 最难的 59.4% 子集存在测试缺陷（fail-to-pass 不严格、隐式依赖）
+- OpenAI 已停止单独报告 SWE-bench Verified 成绩
+
+抗污染替代基准：
+├── SWE-bench Pro：人工严格审查，去除可游戏化任务（推荐主用）
+├── SWE-bench Live：持续从最新 GitHub Issue 收集（永远不在训练集）
+├── SWE-bench Multimodal：含 UI 截图，纯文本 Agent 无法作弊
+└── Multi-SWE-bench：扩展到 Go/Rust/TypeScript 等 7 种语言
+
+面试要点：
+- 若候选人引用"SOTA 72%"或更低数字，说明知识停留在 2024
+- 若候选人能说出"Verified 已污染、应看 SWE-bench Pro/Live"
+  则在 2026 评测话题上属于一线水位
+```
+
 ### GAIA 基准详解
 
 ```python
 gaia_benchmark = {
     "任务": "回答需要多步推理和工具组合的复杂问题",
-    "特点": "答案是确定性的（可以精确匹配）",
+    "出处": "Meta-FAIR + HuggingFace + AutoGPT, NeurIPS 2024",
+    "规模": "466 题（公开 165 题 dev + 301 题 private test）",
+    "特点": "答案是确定性的（精确匹配评测，不需 LLM Judge）",
+
     "三个难度等级": {
-        "Level 1": "需要 1-2 步推理，1 个工具",
-        "Level 2": "需要 3-5 步推理，多个工具组合",
-        "Level 3": "需要 5+ 步推理，复杂工具链和长上下文",
+        "Level 1": "约 5 步推理 + 1 个工具调用（146 题）",
+        "Level 2": "5-10 步推理 + 多工具组合（245 题）",
+        "Level 3": "最多约 50 步 + 复杂工具链 + 长上下文（75 题）",
     },
+
     "示例问题": (
         "'找到 2024 年诺贝尔物理学奖获得者的本科毕业院校，"
         "这所院校的现任校长是谁？'"
         "→ 需要：搜索→提取→再搜索→提取"
+    ),
+
+    "人机差距（原论文，2024）": {
+        "人类志愿者": "92% 准确率",
+        "GPT-4 + plugins": "15% 准确率",
+        "启示": "GAIA 设计目标是'对人简单、对 Agent 极难'，差距 6x",
+    },
+
+    "2026 进展": (
+        "Open Deep Research 类 Agent（OpenAI Deep Research、"
+        "Manus、GPT Researcher 等）在 Level 1 已超 70%，"
+        "Level 3 仍普遍 <40%——多步规划仍是瓶颈"
     ),
 }
 ```
@@ -97,7 +144,7 @@ gaia_benchmark = {
 ```python
 # LoCoMo（Maharana et al., 2024，CMU + Snap Research）
 locomo = {
-    "对话规模": "50 段对话，平均 35 sessions / 9K tokens",
+    "对话规模": "50 段对话，每段 19-35 sessions / ~300 turns / 9K-26K tokens（非固定 9K）",
     "QA 规模": "约 1500-2000 个问答对",
     "5 类任务": {
         "single-hop":  "841 题——单步事实检索",
@@ -107,15 +154,17 @@ locomo = {
         "adversarial": "对抗性问题——抗误导/干扰",
     },
     "特色": "persona-grounded + 多模态对话",
-    "局限": "对话偏短（~9K），话题有限",
+    "局限": "话题偏个人闲聊（persona-grounded），缺乏 task-oriented 场景",
 }
 
 # LongMemEval（Wu et al., 2024，ICLR 2025）
 longmemeval = {
     "QA 规模": "500 题人工构造（LongMemEval_S 标准集）",
-    "context 长度": "4K~115K tokens（动态可扩展）",
-    "5 大核心记忆能力": {
-        "Information Extraction":    "从长对话中提取关键信息",
+    "context 长度": "4K~115K tokens（LongMemEval_S 标准集）",
+    "context 扩展": "LongMemEval-M 可达 1.5M tokens / 500 sessions（M = Medium）",
+    "6 大核心记忆能力": {
+        "Single-Session-User":       "单 session 内用户事实提取",
+        "Single-Session-Assistant":  "单 session 内助手输出的引用",
         "Multi-Session Reasoning":   "跨多个 session 的推理（30 题）",
         "Temporal Reasoning":        "时间相关推理（133 题）",
         "Knowledge Updates":         "用新信息覆盖旧信息（78 题）⭐ LoCoMo 缺失项",

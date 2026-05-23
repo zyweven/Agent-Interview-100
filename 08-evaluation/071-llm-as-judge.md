@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-LLM-as-Judge 是用一个强大的 LLM（如 GPT-4）自动评估另一个 LLM 输出质量的技术，在成本和质量之间取得了最佳平衡。两种核心模式：**Pointwise 评分**（对单个输出按维度打分，如 1-5 分）和 **Pairwise 对比**（比较两个输出哪个更好）。研究表明 LLM Judge 与人类评估者的一致性可达 80%+，但存在系统性偏差：**位置偏差**（倾向于给排在前面的答案更高分）、**冗长偏差**（偏好更长的回答）、**自我偏好**（GPT-4 Judge 偏好 GPT-4 的输出）。缓解策略包括：交换位置多次评估、提供详细的评分 Rubric、使用多个 Judge 投票、定期用人工标注校准。2025 年的新趋势是 **Agent-as-Judge**——用 Agent 代替单纯的 LLM 做评估，Agent 可以执行代码验证、搜索事实等操作来辅助判断。
+LLM-as-Judge 是用一个强大的 LLM（如 GPT-4）自动评估另一个 LLM 输出质量的技术，在成本和质量之间取得了最佳平衡。两种核心模式：**Pointwise 评分**（对单个输出按维度打分，如 1-5 分）和 **Pairwise 对比**（比较两个输出哪个更好）。**衡量 Judge 可靠性的正确指标是 Cohen's Kappa（κ）**——顶级 Judge（GPT-4o / Claude Opus）的 κ ≈ 0.78-0.84，逼近人类-人类一致性（κ ≈ 0.80）。⚠️ **常见误区**：很多文章引用"Judge 与人类一致率 80%+"看似很高，但 raw percent agreement 容易虚高（κ=0.62 也能 >80% 一致率），学术界（"Judging the Judges" arXiv:2406.12624）明确指出应优先报告 Kappa。已知系统性偏差：**位置偏差**（倾向于给排在前面的答案更高分）、**冗长偏差**（偏好更长的回答）、**自我偏好**（GPT-4 Judge 偏好 GPT-4 的输出）。缓解策略包括：交换位置多次评估、提供详细的评分 Rubric、使用多个 Judge 投票、定期用人工标注校准。2025 年的新趋势是 **Agent-as-Judge**——用 Agent 代替单纯的 LLM 做评估，Agent 可以执行代码验证、搜索事实等操作来辅助判断。
 
 ## 详细解析
 
@@ -92,7 +92,7 @@ class ReliableLLMJudge:
         avg_score = np.mean(scores)
 
         # 策略 2：多 Judge 投票（减少单模型偏差）
-        judges = ["gpt-4o", "claude-sonnet-4-6", "gemini-pro"]
+        judges = ["gpt-4o", "claude-sonnet-4-5", "gemini-pro"]
         multi_scores = []
         for judge in judges:
             s = await self.judge_with_model(judge, question, answer, rubric)
@@ -184,7 +184,7 @@ class AgentJudge:
 
 ## 常见误区 / 面试追问
 
-1. **误区："LLM Judge 的评分就是客观事实"** — LLM Judge 的评分包含系统性偏差，不应被视为绝对真理。它是"有偏差的专家意见"，需要用人工标注定期校准。最佳实践是报告 Judge 与人工的一致率（Cohen's Kappa）。
+1. **误区："LLM Judge 的评分就是客观事实"** — LLM Judge 的评分包含系统性偏差，不应被视为绝对真理。它是"有偏差的专家意见"，需要用人工标注定期校准。**衡量 Judge 可靠性必须用 Cohen's Kappa**（消除随机一致性），而非 raw percent agreement——后者非常容易虚高（κ=0.62 即可对应 >80% percent agreement，但实际可靠性远低于看起来）。基准参考：人类-人类 κ ≈ 0.80，顶级 LLM Judge κ ≈ 0.78-0.84（"Judging the Judges", arXiv:2406.12624）。
 
 2. **误区："Pairwise 比 Pointwise 总是更好"** — Pairwise 在主观评估（风格、偏好）上更稳定，但对于有明确标准的评估（事实正确性），Pointwise + 详细 Rubric 更高效。且 ACL 2025 研究表明 Pairwise 实际上会放大偏差。
 

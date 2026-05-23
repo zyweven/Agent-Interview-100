@@ -187,7 +187,7 @@ class RetryWithBackoff:
 class ModelFallbackChain:
     def __init__(self):
         self.chain = [
-            {"provider": "anthropic", "model": "claude-sonnet-4-20250514"},
+            {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929"},
             {"provider": "anthropic", "model": "claude-haiku-4-5-20251001"},
             {"provider": "openai", "model": "gpt-4o-mini"},  # 跨供应商降级
         ]

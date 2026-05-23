@@ -130,7 +130,10 @@ good_tool_description = {
 }
 
 # 工具描述的质量直接影响 Agent 的工具选择准确率
-# 研究表明：好的工具描述可以提升工具选择准确率 20-30%
+# 在 ToolBench / API-Bank 等工具调用基准上，
+# 清晰的工具描述（含 description + parameter 语义 + 使用边界）
+# 是公认能显著降低误调用与漏调用的关键变量，
+# 远比 prompt 中堆砌"角色扮演"指令更重要
 ```
 
 ### ReAct 模式的 Prompt 设计
@@ -249,7 +252,7 @@ worker_prompt = """
 
 3. **追问："如何减少 Agent 的'工具滥用'？"** — 在 Prompt 中明确工具使用条件："只在需要外部信息时使用搜索工具，能通过推理得到的答案不要搜索"。同时用 negative example 展示不该使用工具的场景。
 
-4. **追问："Agentic Prompt 在不同模型间可移植吗？"** — 不太可移植。不同模型对推理格式、工具调用方式的偏好不同。GPT-4 偏好 JSON 格式的 Action Input，Claude 偏好 XML 标签。最佳实践是针对每个模型调优 Prompt。
+4. **追问："Agentic Prompt 在不同模型间可移植吗？"** — 不太可移植。不同模型对推理格式、工具调用方式的偏好仍有差异，但在 2025-2026 已大幅收敛——GPT-4/5 系列和 Claude 4.x 都已原生支持 tool use / structured outputs，输入格式不再强依赖 JSON 或 XML 包裹。早期"Claude 偏好 XML 标签"是 Claude 2/3 时代的经验法则，到 Claude 4.x native tool use 之后已经不重要——结构化交互直接走 `tools` 参数。最佳实践仍是针对每个目标模型跑评测验证，但**不要再把"XML for Claude / JSON for GPT"当成定律**。
 
 ## 参考资料
 

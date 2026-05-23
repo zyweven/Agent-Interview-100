@@ -54,14 +54,33 @@ shipping_agent = Agent(
 triage_agent = Agent(
     name="Triage Agent",
     instructions="根据用户需求将请求路由给合适的专家",
-    handoffs=[refund_agent, shipping_agent],
-    # 内部自动生成工具：transfer_to_refund_agent, transfer_to_shipping_agent
+    handoffs=[
+        # 简单写法：直接传 Agent
+        refund_agent,
+        # 完整写法：通过 handoff(...) 自定义工具名 / 回调 / 输入过滤
+        handoff(
+            agent=shipping_agent,
+            tool_name_override="route_to_shipping",  # 自定义生成的工具名
+            tool_description_override="将对话交给物流专家处理快递相关问题",
+            on_handoff=lambda ctx: log_handoff(ctx),  # Handoff 触发时回调
+            input_filter=keep_last_n_messages(5),     # 控制传给目标 Agent 的上下文
+            input_type=ShippingHandoffInput,          # Pydantic 模型校验 Handoff 入参
+        ),
+    ],
+    # 内部自动生成工具：transfer_to_refund_agent, route_to_shipping
 )
 
 # LLM 看到的工具列表：
 # - transfer_to_refund_agent: "将对话转交给退款专家"
-# - transfer_to_shipping_agent: "将对话转交给物流专家"
+# - route_to_shipping: 自定义描述
 ```
+
+**核心 API 参数：**
+- `tool_name_override`：自定义生成的工具名（默认 `transfer_to_<agent_name>`）
+- `tool_description_override`：自定义工具描述
+- `on_handoff`：Handoff 发生时的回调（用于日志、审计、状态注入）
+- `input_filter`：过滤传给目标 Agent 的对话历史（OpenAI SDK 提供 `handoff_filters.remove_all_tools` 等内置 filter）
+- `input_type`：用 Pydantic 模型约束 Handoff 的入参，强制结构化
 
 **工作原理：** LLM 足够智能，会在合适的时机调用 `transfer_to_XXX`。当 Handoff 发生时，新 Agent 接管对话并获得完整的对话历史。
 
@@ -216,6 +235,6 @@ class ReliableHandoff:
 
 - [How Agent Handoffs Work in Multi-Agent Systems (Towards Data Science)](https://towardsdatascience.com/how-agent-handoffs-work-in-multi-agent-systems/)
 - [Handoffs (OpenAI Agents SDK)](https://openai.github.io/openai-agents-python/handoffs/)
-- [Handoffs (LangChain Docs)](https://docs.langchain.com/oss/python/langchain/multi-agent/handoffs)
+- [Handoffs (LangChain Docs)](https://docs.langchain.com/oss/python/langchain/multi-agent/handoffs) — LangChain 1.0（2025-10 GA）已主推「Handoff 作为 tool 在 `create_agent` 中实现」的范式，逐步替代独立的 `langgraph-supervisor` 包
 - [Best Practices for Multi-Agent Orchestration and Reliable Handoffs (Skywork AI)](https://skywork.ai/blog/ai-agent-orchestration-best-practices-handoffs/)
 - [Orchestrating Agents: Routines and Handoffs (OpenAI Cookbook)](https://developers.openai.com/cookbook/examples/orchestrating_agents/)

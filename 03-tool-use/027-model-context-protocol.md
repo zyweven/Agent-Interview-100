@@ -102,9 +102,9 @@ MCP 基于 JSON-RPC 2.0，支持两种传输方式：
 # Host 启动 Server 进程，通过 stdin/stdout 通信
 
 # 2. Streamable HTTP（远程通信）—— 适合远程服务
-# MCP 2025-03-26 规范引入，使用单一 HTTP 端点
+# MCP 2025-03-26 规范引入，使用单一 HTTP 端点（按 HTTP method 区分请求/通知/SSE 流）
 # 可选择性使用 SSE 进行流式响应，也支持普通 HTTP 响应
-# 注意：它替代了早期规范中的 HTTP+SSE 双端点传输方式
+# 注意：它取代了早期规范中"独立 HTTP POST + 单独 SSE GET 端点"的传输设计
 ```
 
 **连接生命周期：**
@@ -182,7 +182,7 @@ async def call_tool(name: str, arguments: dict):
 
 ### 生态现状
 
-MCP 已被主要 AI 平台采纳：OpenAI、Google DeepMind 均已支持。该协议由 Linux Foundation（2025 年 12 月转入 Agentic AI Foundation）托管，官方 SDK 覆盖 TypeScript、Python、C#、Kotlin、Go、Ruby 等语言。社区已有数千个开源 MCP Server 可直接使用。
+MCP 已被主要 AI 平台采纳：OpenAI、Google DeepMind、Microsoft 均已支持。该协议由 Anthropic 主导，OpenAI / Google DeepMind / Microsoft 共同参与的 MCP Steering Committee 治理，规范文档在 [modelcontextprotocol.io](https://modelcontextprotocol.io/) 上维护。官方 SDK 覆盖 TypeScript、Python、C#、Kotlin、Go、Ruby 等语言，社区已有数千个开源 MCP Server 可直接使用。
 
 ### MCP vs Claude Skills：连接性 vs 方法论
 
@@ -308,7 +308,7 @@ MCP 的 JSON-RPC over stdio 是黑盒。可以使用 `npx @modelcontextprotocol/
 
 ## 常见误区 / 面试追问
 
-1. **误区："MCP 是 Anthropic 的私有协议"** — MCP 是完全开源的标准，由 Linux Foundation 托管，OpenAI 和 Google 都已采纳。它不绑定任何特定模型或平台。
+1. **误区："MCP 是 Anthropic 的私有协议"** — MCP 是完全开源的标准，由 Anthropic 主导，OpenAI / Google DeepMind / Microsoft 共同参与治理（MCP Steering Committee）。它不绑定任何特定模型或平台。
 
 2. **误区："MCP 替代了 Function Calling"** — 两者互补而非替代。MCP 标准化了工具的定义和发现方式，Function Calling 是 LLM 调用工具的底层机制。MCP Server 暴露工具，LLM 通过 Function Calling 机制调用它们。
 

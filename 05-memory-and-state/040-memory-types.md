@@ -167,6 +167,51 @@ memory_tools = [
 # Agent 在任务执行中自主调用这些工具管理记忆
 ```
 
+### 官方原语：Anthropic Memory Tool（memory_20250818，2025-08）
+
+Anthropic 在 2025-08 通过 Claude Developer Platform 推出 **Memory Tool**，把"记忆"做成 client/server 模式的官方工具原语——服务端只暴露文件接口（list/read/create/update/delete），由客户端持久化到任意存储后端（本地 FS、S3、SQLite、Redis 等），Claude 在 agentic loop 中按需调用：
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+# 1) 声明 Memory Tool（type 字段是 server-managed 标识，与 web_search 同范式）
+memory_tool = {
+    "type": "memory_20250818",
+    "name": "memory",                       # 工具固定名
+}
+
+# 2) 调用 Claude，启用 context-management beta 与 memory beta
+response = client.messages.create(
+    model="claude-sonnet-4-5",
+    max_tokens=2048,
+    tools=[memory_tool],
+    extra_headers={"anthropic-beta": "context-management-2025-06-27"},
+    messages=[
+        {"role": "user", "content": "总结一下我上次说的项目偏好"}
+    ],
+)
+
+# 3) Claude 会返回 tool_use 形如：
+#    {"type": "tool_use", "name": "memory",
+#     "input": {"command": "view", "path": "/memories"}}
+#    客户端在本地文件系统/数据库里实现 view/create/str_replace/insert/delete/rename
+#    把结果作为 tool_result 回灌，Claude 在下一轮继续 read/write
+
+# 4) 与上下文编辑（context_editing）配合：当工具结果累计接近上限，
+#    自动清掉旧的 tool_result block，但保留写入 memory 文件的那一份
+#    → 实现"长寿命 agent + 紧凑 context window"
+```
+
+关键特性：
+- **客户端持有数据所有权**：服务器不存任何记忆内容，便于满足 GDPR/合规
+- **与 context editing 协同**：旧的 tool_result 会被服务端策略性清理，但 memory 文件保留
+- **跨会话共享**：把同一份 memory 文件挂到多个 Claude 会话/Agent，实现团队级或个人长期画像
+- **比向量数据库更简单**：路径 + 文本读写，模型自己决定存什么，不依赖额外的 embedding 服务
+
+这是目前 LLM 厂商提供的最完整的"官方记忆原语"，与 Anthropic Skills、Structured Outputs 一起构成 2025-2026 Claude Platform 的三大新原语。
+
 ### 三种记忆的关系
 
 | 维度 | 短期记忆 | 工作记忆 | 长期记忆 |
@@ -194,3 +239,5 @@ memory_tools = [
 - [AgeMem: Unified Long-Term and Short-Term Memory (arXiv)](https://arxiv.org/abs/2601.01885)
 - [Agent Memory: How to Build Agents that Learn and Remember (Letta)](https://www.letta.com/blog/agent-memory)
 - [Memory Overview (LangChain Docs)](https://docs.langchain.com/oss/python/concepts/memory)
+- [Anthropic Memory Tool (memory_20250818, Official Docs)](https://docs.anthropic.com/en/docs/build-with-claude/tool-use/memory-tool)
+- [Building agents with the Claude Developer Platform: Memory Tool (Anthropic Engineering)](https://www.anthropic.com/engineering/memory-and-context-management)

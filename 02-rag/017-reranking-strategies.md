@@ -50,7 +50,7 @@ Cross-Encoder（联合编码）:
 - **Bi-Encoder**：编码 100,000 个文档（一次性，可离线）+ 编码 1 个查询 = 100,001 次
 - **Cross-Encoder**：编码 100,000 对 (query, doc) = 100,000 次（每次查询都要）
 
-如果用小型 Cross-Encoder（如 BERT）在 V100 GPU 上，100,000 个文档的单次查询需要等待超过 50 小时！
+即便用小型 Cross-Encoder（如 ms-marco-MiniLM）在 V100 GPU 上对 100,000 个文档逐对打分，单次查询也需数分钟到数十分钟（取决于 batch size 与硬件），完全无法在交互式 RAG 中接受。
 
 这就是为什么 Cross-Encoder 只能用于重排少量候选（通常 20-100 个）。
 
@@ -117,7 +117,7 @@ retriever = ContextualCompressionRetriever(
 import cohere
 co = cohere.Client("API_KEY")
 reranked = co.rerank(
-    model="rerank-english-v3.0",
+    model="rerank-v3.5",  # Cohere 2024-12 发布的多语言新版，可替代 rerank-english-v3.0
     query=query,
     documents=[doc.content for doc in candidates],
     top_n=5

@@ -115,8 +115,16 @@ class PromptABTest:
         # 例如：["quality_score", "latency", "cost", "safety"]
 
     def assign_variant(self, user_id):
-        """确定性分流：同一用户始终看到同一版本"""
-        hash_val = hash(f"{self.test_id}:{user_id}") % 100
+        """确定性分流：同一用户始终看到同一版本
+
+        重要：必须用 hashlib 而非 Python 内置 hash()——
+        内置 hash() 在每个 Python 进程启动时会随机 seed（PYTHONHASHSEED），
+        多进程/多副本服务里会出现"同一用户在 A 副本走 control、
+        在 B 副本走 treatment"的灾难，导致 A/B 数据全废。
+        """
+        import hashlib
+        digest = hashlib.md5(f"{self.test_id}:{user_id}".encode("utf-8")).hexdigest()
+        hash_val = int(digest, 16) % 100   # 跨进程稳定
         cumulative = 0
         for variant, split in self.traffic_split.items():
             cumulative += split * 100

@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-上下文窗口是 LLM 的"工作记忆"——所有输入（System Prompt、对话历史、检索内容、工具结果）和输出都必须装进这个固定大小的 token 空间（4K 到百万级 tokens，如 Claude 支持 200K，Gemini 支持 1M+）。随着对话增长，上下文窗口的管理与压缩成为核心挑战。管理策略从简到繁包括：**截断（Truncation）**——直接裁剪最早的消息；**滑动窗口（Sliding Window）**——只保留最近 N 轮对话；**观察掩码（Observation Masking）**——用占位符替代旧内容；**LLM 摘要（Summarization）**——用模型将旧对话压缩为摘要；**分层摘要（Hierarchical）**——越旧的信息压缩越激进；**结构化提取**——提取实体和事实到结构化格式。研究表明，简单策略（掩码、截断）在总效率上往往不逊于复杂的 LLM 摘要。生产最佳实践是将上下文控制在窗口的 75% 以内，用 ACON 框架的分层阈值方法（40%/60%/95%）做自适应压缩，并注意"中间丢失"效应。
+上下文窗口是 LLM 的"工作记忆"——所有输入（System Prompt、对话历史、检索内容、工具结果）和输出都必须装进这个固定大小的 token 空间（4K 到百万级 tokens，如 Claude 标准为 200K，Sonnet 4.6+ / Opus 4.6+ / Mythos 已支持 1M；Gemini 2.5 Pro 也支持 1M+）。随着对话增长，上下文窗口的管理与压缩成为核心挑战。管理策略从简到繁包括：**截断（Truncation）**——直接裁剪最早的消息；**滑动窗口（Sliding Window）**——只保留最近 N 轮对话；**观察掩码（Observation Masking）**——用占位符替代旧内容；**LLM 摘要（Summarization）**——用模型将旧对话压缩为摘要；**分层摘要（Hierarchical）**——越旧的信息压缩越激进；**结构化提取**——提取实体和事实到结构化格式。研究表明，简单策略（掩码、截断）在总效率上往往不逊于复杂的 LLM 摘要。生产最佳实践是将上下文控制在窗口的 75% 以内（用 ACON 等自适应压缩框架做触发式压缩），并注意"中间丢失"效应。
 
 ## 详细解析
 
@@ -204,37 +204,39 @@ class StructuredExtractor:
 
 ### 四、生产实践方案
 
-#### ACON 框架：自适应分层压缩
+#### ACON 框架：自然语言指引优化 + 小模型蒸馏
+
+ACON 原论文（"Optimizing Context Compression for Long-Horizon LLM Agents", arXiv:2510.00615）实际由两个核心机制构成，**并不是按 40%/60%/95% 三阈值切换**——这是常见误传，请勿在面试中引用：
+
+1. **Natural-Language Compression Guideline Optimization**：把"该压缩什么/保留什么"显式化为一段可优化的自然语言指引，通过对比成功/失败轨迹的反馈不断 refine（类似 OPRO/PromptBreeder 风格的 prompt 优化）。
+2. **Compressor Distillation**：把大模型生成的高质量压缩样本蒸馏到一个小模型（如 Qwen2.5-7B），作为生产环境的廉价 compressor。
 
 ```python
 class ACONCompressor:
-    """ACON: Agent Context Optimization"""
+    """ACON: Optimizing Context Compression for Long-Horizon LLM Agents
 
-    THRESHOLDS = {
-        "normal": 0.40,     # < 40% 上下文使用：不压缩
-        "moderate": 0.60,   # 40-60%：温和压缩（摘要旧内容）
-        "aggressive": 0.95, # 60-95%：激进压缩（只保留关键信息）
-        "emergency": 1.00,  # > 95%：紧急截断
-    }
+    实际工作流（简化）：
+      1) 给定任务、当前 trace、已优化的 guideline
+      2) compressor LLM 按 guideline 输出"保留 + 丢弃"决策
+      3) 失败案例反向优化 guideline；成功 trace 蒸馏到小 compressor
+    """
 
-    def compress(self, messages, current_usage_ratio):
-        if current_usage_ratio < self.THRESHOLDS["normal"]:
-            return messages  # 不压缩
+    def __init__(self, compressor_llm, guideline: str):
+        self.compressor = compressor_llm   # 可以是大模型；生产用蒸馏后的小模型
+        self.guideline  = guideline        # 通过对比反馈持续优化的自然语言指引
 
-        elif current_usage_ratio < self.THRESHOLDS["moderate"]:
-            # 温和压缩：摘要 20 轮前的内容
-            return self.summarize_old(messages, keep_recent=20)
-
-        elif current_usage_ratio < self.THRESHOLDS["aggressive"]:
-            # 激进压缩：只保留最近 5 轮 + 结构化摘要
-            return self.structural_compress(messages, keep_recent=5)
-
-        else:
-            # 紧急截断
-            return self.emergency_truncate(messages, keep_recent=3)
+    def compress(self, task: str, trace: list[dict]) -> list[dict]:
+        prompt = f"""
+        任务：{task}
+        当前轨迹：{trace}
+        压缩指引（请严格遵守）：
+        {self.guideline}
+        请输出保留后的轨迹，丢弃对当前任务无价值的工具结果/对话片段。
+        """
+        return self.compressor.invoke(prompt)
 ```
 
-ACON 研究结果：减少 26-54% 峰值 token 使用量，同时保持任务成功率。对于小模型，性能还能提升 20-46%。
+ACON 论文报告：在 AppWorld / OfficeBench / TravelPlanner 等长视野 Agent 任务上显著降低峰值 token 使用，同时维持甚至提升任务成功率；蒸馏后的小 compressor 兼具低成本和接近大模型的压缩质量。具体数字以论文为准——避免引用未经核实的 40%/60%/95% 阈值。
 
 #### 混合策略（生产推荐）
 
@@ -305,7 +307,7 @@ LLM 对上下文中不同位置的注意力：
 | LLM 摘要 | 高（+7%） | 高 | 中 | 长对话助手 |
 | 分层压缩 | 中 | 高 | 中 | 长时运行的 Agent |
 | 结构化提取 | 中 | 最高 | 高 | 客服/销售场景 |
-| ACON 自适应 | 自适应 | 高 | 高 | 生产级 Agent |
+| ACON（指引+蒸馏） | 自适应 | 高 | 高 | 生产级长视野 Agent |
 
 #### 关键洞察
 
@@ -332,7 +334,7 @@ insights = {
 
 6. **追问："增量摘要 vs 全量重新摘要？"** — 增量摘要（每次只处理新消息）更快更便宜，但可能累积误差。全量重新摘要更准确但成本高。实践中用增量摘要 + 定期全量校正的混合方式。
 
-7. **追问："Claude 的 Server-Side Compaction 是什么？"** — Claude API 支持服务端自动压缩——当对话过长时，系统自动压缩之前的消息，保持对话可以无限延续。还支持清除工具结果和思考过程来节省空间。
+7. **追问："Claude 的 Server-Side Compaction 是什么？"** — Anthropic 在 Claude **Sonnet 4.6+ / Opus 4.6+** 上提供服务端自动压缩（context editing / compaction）能力——当对话接近上限时，由服务端策略性删除/折叠旧的 tool_result 与思考块，让长对话可以"无限延续"。早期 Sonnet 4 / Opus 4 不带这套原语，需要客户端自己实现。此外它和 Memory Tool（memory_20250818）配合使用尤其强大：被压缩掉的内容可以通过 Memory Tool 显式落盘后再被检索回来，相当于 Anthropic 把"长寿命 Agent 的上下文虚拟内存"做成了官方原语组合。
 
 ## 参考资料
 

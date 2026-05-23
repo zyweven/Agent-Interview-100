@@ -60,18 +60,22 @@ and solve the problem step by step.
 ### 三、基准测试结果
 
 ```
-数学推理基准（text-davinci-003）：
+数学推理基准（text-davinci-003，PS 原论文 Table 4）：
 ┌─────────────────┬──────────┬──────────┬──────────┐
 │ 方法            │ GSM8K    │ SVAMP    │ MultiArith│
 ├─────────────────┼──────────┼──────────┼──────────┤
-│ Zero-shot       │ 10.4%    │ 63.7%    │ 17.7%    │
-│ Zero-shot CoT   │ 56.4%    │ 74.3%    │ 78.7%    │
-│ Plan-and-Solve  │ 58.2%    │ 77.8%    │ 79.3%    │
-│ PS+             │ 58.7%    │ 79.2%    │ 81.2%    │
-│ Few-shot CoT    │ 58.8%    │ 79.0%    │ 83.8%    │
+│ Zero-shot       │ 17.7     │ 65.4     │ 22.7     │
+│ Zero-shot CoT   │ 56.4     │ 74.3     │ 78.7     │
+│ Plan-and-Solve  │ 58.2     │ 77.8     │ 87.2     │
+│ PS+             │ 59.3     │ 79.2     │ 91.8     │
+│ Few-shot CoT    │ 58.4     │ 79.4     │ 93.6     │
 └─────────────────┴──────────┴──────────┴──────────┘
 
-注意：PS+ 几乎追平 Few-shot CoT，但不需要提供任何示例！
+注意：
+- 数字以 Wang et al. 2023 PS Prompting 原论文 Table 4 为准（text-davinci-003 / Zero-shot CoT 对照）。
+- 不同复现/不同 base model 数字会有抖动，但 Few-shot CoT 在 MultiArith 上保持 ~93%，
+  PS+ 接近 92%，远高于早期勘误中常见的"83.8%"。
+- PS+ 几乎追平 Few-shot CoT，但**不需要提供任何示例**！
 ```
 
 ### 四、Plan-and-Execute Agent 架构

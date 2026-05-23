@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-跨模型 Prompt 迁移（Cross-Model Prompt Portability）是指让同一个 Prompt 在不同 LLM（GPT-4、Claude、Gemini、Llama 等）上都能有效工作的能力。现实中 Prompt 高度模型特异——为 GPT-4 精心调优的 Prompt 迁移到 Claude 可能效果骤降。核心挑战包括：(1) **Tokenization 差异**——不同模型的分词方式不同；(2) **指令偏好差异**——有的模型偏好详细指令，有的偏好简洁指令；(3) **格式偏好差异**——有的偏好 JSON，有的偏好 XML；(4) **能力边界差异**——推理能力、上下文长度、多语言能力不同。解决方案包括：编写**模型无关的核心 Prompt** + **模型特定的适配层**，或使用 **PromptBridge** 等自动化迁移工具。Stanford 的 PromptBridge 研究在多 Agent 场景下将迁移后的准确率损失控制在 5% 以内。
+跨模型 Prompt 迁移（Cross-Model Prompt Portability）是指让同一个 Prompt 在不同 LLM（GPT-4、Claude、Gemini、Llama 等）上都能有效工作的能力。现实中 Prompt 高度模型特异——为 GPT-4 精心调优的 Prompt 迁移到 Claude 可能效果骤降。核心挑战包括：(1) **Tokenization 差异**——不同模型的分词方式不同；(2) **指令偏好差异**——有的模型偏好详细指令，有的偏好简洁指令；(3) **格式偏好差异**——有的偏好 JSON，有的偏好 XML；(4) **能力边界差异**——推理能力、上下文长度、多语言能力不同。解决方案包括：编写**模型无关的核心 Prompt** + **模型特定的适配层**，或使用 **PromptBridge** 等自动化迁移工具。**PromptBridge**（arXiv:2512.01420，2025）提出 Model-Adaptive Reflective Prompt Evolution + 跨模型映射的训练自由（training-free）迁移框架——无需对源/目标模型做参数微调，只用反思式 Prompt 演化在多 Agent 场景中自动完成跨模型适配。
 
 ## 详细解析
 
@@ -192,9 +192,9 @@ class MultiModelAgent:
 
     def __init__(self):
         self.models = {
-            "planning": "claude-opus-4-6",      # 规划用强模型
+            "planning": "claude-opus-4-5",       # 规划用强模型
             "execution": "gpt-4o-mini",          # 执行用快模型
-            "evaluation": "claude-sonnet-4-6",   # 评估用中等模型
+            "evaluation": "claude-sonnet-4-5",   # 评估用中等模型
         }
         self.adapter = PromptAdapter()
 

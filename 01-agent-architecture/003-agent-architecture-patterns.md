@@ -109,7 +109,7 @@ def react_agent(question: str, max_steps: int = 10) -> str:
 
     for step in range(max_steps):
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=1024,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}]

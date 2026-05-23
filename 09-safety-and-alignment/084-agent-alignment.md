@@ -104,7 +104,13 @@ alignment_techniques = {
         },
         "DPO (Direct Preference Optimization)": {
             "原理": "直接从偏好数据优化策略，跳过奖励模型",
-            "优势": "更简单稳定的训练流程",
+            "优势": "更简单稳定的训练流程，无需维护单独的 reward model",
+            "局限": [
+                "对训练数据分布偏移敏感（off-policy 时容易过拟合)",
+                "对长 trajectory 任务（如多轮 Agent 推理）效果不如 PPO 等 on-policy 方法",
+                "需要高质量成对偏好数据，标注成本仍可观",
+                "缺乏 PPO 的探索机制，可能陷入次优策略",
+            ],
         },
     },
 

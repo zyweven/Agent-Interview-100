@@ -167,6 +167,8 @@ class AntiSycophancyProtocol:
 
 ### 资源冲突解决
 
+> 注：资源冲突（多个 Agent 竞争同一外部资源 / 锁 / 配额）本质上属于"任务分配与协调"范畴，更系统的处理见第 034 题。本节仅给出与冲突解决机制对齐的最小示例。
+
 ```python
 class ResourceConflictResolver:
     """处理多个 Agent 竞争同一资源的冲突"""

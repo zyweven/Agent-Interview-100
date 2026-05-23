@@ -89,17 +89,21 @@ class State(TypedDict):
 ```python
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-# 编译图时附加 Checkpointer
-checkpointer = SqliteSaver.from_conn_string("./agent_state.db")
-app = graph.compile(checkpointer=checkpointer)
+# SqliteSaver.from_conn_string 是 context manager，必须用 with ... as 形式打开
+# （直接赋值给变量会得到一个未进入的 contextmanager 对象，运行时报错）
+with SqliteSaver.from_conn_string("./agent_state.db") as checkpointer:
+    app = graph.compile(checkpointer=checkpointer)
 
-# 每个执行步骤自动保存状态快照
-config = {"configurable": {"thread_id": "user_123_session_1"}}
-result = app.invoke({"messages": [user_msg]}, config)
+    # 每个执行步骤自动保存状态快照
+    config = {"configurable": {"thread_id": "user_123_session_1"}}
+    result = app.invoke({"messages": [user_msg]}, config)
 
-# 可以从任意检查点恢复
-# 场景：服务重启、Human-in-the-Loop 审批后继续
-result = app.invoke(None, config)  # 从上次暂停处继续
+    # 可以从任意检查点恢复
+    # 场景：服务重启、Human-in-the-Loop 审批后继续
+    result = app.invoke(None, config)  # 从上次暂停处继续
+
+# 长进程服务可以用 AsyncSqliteSaver / PostgresSaver 的 async with 形式
+# 也可以手动调用 .setup() + .close()，但 with 是官方推荐写法
 ```
 
 **Checkpointing 使得以下场景成为可能：**

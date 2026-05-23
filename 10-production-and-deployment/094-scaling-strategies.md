@@ -76,9 +76,13 @@ from celery import Celery
 
 app = Celery('agent', broker='redis://redis:6379/0')
 
-@app.task(bind=True, max_retries=3, time_limit=120)
+@app.task(bind=True, max_retries=3, time_limit=600, soft_time_limit=540)
 def execute_agent_task(self, task_id, user_message, session_id):
-    """Agent 任务 Worker"""
+    """Agent 任务 Worker
+    time_limit 设为 600s（10min）：本文档前提是 Agent 1-60s 甚至更长，
+    Celery 默认 120s 会硬杀长任务。soft_time_limit 提前 1 分钟抛 SoftTimeLimitExceeded，
+    让 Worker 有机会优雅 cleanup。Coding/Research Agent 等更长任务建议 1800s+。
+    """
     try:
         # 从外部存储加载会话状态
         session = SessionStore.load(session_id)
@@ -161,7 +165,7 @@ class MultiProviderRouter:
             "anthropic": {
                 "rate_limit": 4000,
                 "weight": 0.35,
-                "models": ["claude-sonnet-4-6"],
+                "models": ["claude-sonnet-4-5"],
             },
             "google": {
                 "rate_limit": 5000,

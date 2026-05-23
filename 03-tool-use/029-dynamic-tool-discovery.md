@@ -103,7 +103,10 @@ class ToolRegistry:
         query_vec = self.model.encode([query])
         faiss.normalize_L2(query_vec)
         scores, indices = self.index.search(query_vec, top_k)
-        return [self.tools[i] for i in indices[0] if scores[0][list(indices[0]).index(i)] > 0.3]
+        return [
+            self.tools[idx] for idx, score in zip(indices[0], scores[0])
+            if score > 0.3
+        ]
 
 # 使用：只将相关工具传给 LLM
 registry = ToolRegistry(all_200_tools)
@@ -157,9 +160,8 @@ class InstructionToolRetriever:
             "system_prompt": relevant_instructions,  # 精简的指令
             "tools": relevant_tools,                 # 最小工具集
         }
-        # 效果：每步上下文 tokens 减少 95%
-        #       工具选择准确率提升 32%
-        #       端到端成本降低 70%
+        # 预期收益：显著降低每步 context tokens、
+        # 提升工具选择准确率、降低端到端成本（具体提升幅度因任务和工具规模而异）
 ```
 
 ### 方式 5：集中式工具注册中心
@@ -223,6 +225,7 @@ class CentralToolRegistry:
 
 - [Dynamic Tool Discovery in MCP (Speakeasy)](https://www.speakeasy.com/mcp/tool-design/dynamic-tool-discovery)
 - [7 Benefits of a Centralized MCP Tool Registry (Nordic APIs)](https://nordicapis.com/7-benefits-of-a-centralized-mcp-tool-registry/)
-- [Dynamic System Instructions and Tool Exposure for Efficient Agentic LLMs (arXiv)](https://arxiv.org/abs/2602.17046)
+- [Toolformer: Language Models Can Teach Themselves to Use Tools (arXiv:2302.04761)](https://arxiv.org/abs/2302.04761)
+- [ToolBench: On the Tool Manipulation Capability of Open-source Large Language Models (arXiv:2305.16504)](https://arxiv.org/abs/2305.16504)
 - [MCP Gateway Registry: Dynamic Tool Discovery (GitHub)](https://github.com/agentic-community/mcp-gateway-registry/blob/main/docs/dynamic-tool-discovery.md)
 - [How Dynamic Tool Discovery with MCP Is Rewriting the Rules of Autonomy (Medium)](https://medium.com/ai-simplified-in-plain-english/how-dynamic-tool-discovery-with-mcp-is-rewriting-the-rules-of-autonomy-5cce7475d6e2)

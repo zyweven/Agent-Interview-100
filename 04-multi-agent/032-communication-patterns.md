@@ -46,6 +46,8 @@ await bus.send("researcher", "writer",
 
 **生产实现：** 通常使用消息队列（RabbitMQ、Redis Streams）实现可靠的异步消息传递。
 
+> 注：本题讨论的是「通信模式」（Agent 之间如何交换信息），与第 033 题的「编排模式」（Hub-Spoke / Pipeline / Hierarchical 等控制流结构）是正交维度——一个 Pipeline 编排既可以用消息传递实现，也可以用共享状态实现。
+
 ### 模式 2：共享状态（Shared State）
 
 所有 Agent 读写同一个全局状态，类似多人编辑同一个文档：
@@ -159,7 +161,7 @@ class BlackboardSystem:
 | 一致性 | 最终一致 | 强一致 | 最终一致 |
 | Token 效率 | 低（重复传递） | 中 | 高（共享上下文） |
 | 调试难度 | 高（追踪消息流） | 低（检查状态） | 中 |
-| 典型框架 | AutoGen | LangGraph | LbMAS、Terrarium |
+| 通信落地示例 | AutoGen GroupChat、消息队列 | LangGraph State（编排框架内置） | LbMAS、Terrarium |
 
 ### 实际选择指南
 

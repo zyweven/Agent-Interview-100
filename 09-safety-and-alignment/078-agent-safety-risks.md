@@ -5,7 +5,7 @@
 
 ## 简短回答
 
-LLM Agent 的安全风险远超传统 LLM 应用，因为 Agent 有**工具调用、多步执行、外部交互**等能力，攻击面显著扩大。OWASP 2025 Top 10 LLM 安全风险清单将 **Prompt Injection** 列为头号威胁。主要风险分为四类：(1) **输入攻击**——Prompt Injection（直接/间接）、Jailbreak 绕过安全限制；(2) **工具和数据滥用**——Agent 被诱导执行危险操作（删除数据、发送邮件）、通过工具调用泄露敏感信息；(3) **推理和行为风险**——幻觉导致错误决策、过度代理（Agent 执行超出预期的操作）、多步推理中的级联错误；(4) **系统级风险**——多 Agent 间的信任链攻击、数据投毒、资源耗尽（DoS）、Shadow AI（未经审批使用 AI 工具泄露数据）。Martin Fowler 提出的 **"致命三角"（Lethal Trifecta）**——当 Agent 同时接触敏感数据、不受信内容和外部通信时，风险达到最高。SafeAgentBench 的测试发现所有 16 个主流 Agent 的安全评分都低于 60%。
+LLM Agent 的安全风险远超传统 LLM 应用，因为 Agent 有**工具调用、多步执行、外部交互**等能力，攻击面显著扩大。OWASP 2025 Top 10 LLM 安全风险清单将 **Prompt Injection** 列为头号威胁。主要风险分为四类：(1) **输入攻击**——Prompt Injection（直接/间接）、Jailbreak 绕过安全限制；(2) **工具和数据滥用**——Agent 被诱导执行危险操作（删除数据、发送邮件）、通过工具调用泄露敏感信息；(3) **推理和行为风险**——幻觉导致错误决策、过度代理（Agent 执行超出预期的操作）、多步推理中的级联错误；(4) **系统级风险**——多 Agent 间的信任链攻击、数据投毒、资源耗尽（DoS）、Shadow AI（未经审批使用 AI 工具泄露数据）。Simon Willison 于 2025-06 在个人博客提出的 **"致命三角"（Lethal Trifecta）**——当 Agent 同时接触敏感数据、不受信内容和外部通信时，风险达到最高（Meta 2025-10 的 "Agents Rule of Two" 官方博客也明确归属此概念给 Willison）。**Agent-SafetyBench**（arXiv:2412.14470 清华团队，2024-12）的测试发现 16 个主流 Agent 在 2000 个测试用例上**全部安全评分 < 60%**。
 
 ## 详细解析
 
@@ -41,7 +41,8 @@ LLM Agent 安全风险分类：
 ### "致命三角"（Lethal Trifecta）
 
 ```python
-# Martin Fowler 提出的 Agent 安全核心框架
+# Simon Willison 提出的 Agent 安全核心框架
+# 原文：https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/
 
 lethal_trifecta = {
     "三要素": {
@@ -59,6 +60,12 @@ lethal_trifecta = {
     "真实案例": (
         "ServiceNow Now Assist：攻击者通过二阶 Prompt Injection "
         "诱骗低权限 Agent 让高权限 Agent 将客户文件导出到外部 URL"
+    ),
+    "延伸框架": (
+        "Meta 在 2025-10-31 基于 Willison 的致命三角提出"
+        "'Agents Rule of Two'——见 081 题（最小权限沙箱）。"
+        "Martin Fowler 在《Agentic AI and Security》中引用了 Willison 的概念，"
+        "并非原创者"
     ),
 }
 ```
@@ -108,13 +115,18 @@ multi_agent_attack = {
 }
 ```
 
-### SafeAgentBench 评估结果
+### Agent-SafetyBench 评估结果
 
 ```python
-# SafeAgentBench：Agent 安全基准测试
+# Agent-SafetyBench（arXiv:2412.14470，清华大学，2024-12）
 
-safe_agent_bench = {
-    "规模": "2000 个测试用例，16 个主流 LLM Agent",
+agent_safety_bench = {
+    "全称": "Agent-SafetyBench: Evaluating the Safety of LLM Agents",
+    "规模": "2000 个测试用例（349 个 environments × 8 类风险），16 个主流 LLM Agent",
+    "评测维度": [
+        "8 类安全风险（PII 泄露、未授权操作、危险物质、违法、误导信息等）",
+        "10 类失效模式（self-distraction、weak risk awareness 等）",
+    ],
     "关键发现": {
         "最高安全分": "< 60%（没有 Agent 及格）",
         "最低安全分": "< 20%（部分 Agent）",
@@ -125,6 +137,18 @@ safe_agent_bench = {
         ],
     },
     "启示": "当前 Agent 的安全能力远未达到生产要求，必须依赖外部护栏",
+}
+
+# ⚠️ 名字相近但不同的另一基准：SafeAgentBench
+safe_agent_bench_disambiguation = {
+    "SafeAgentBench (arXiv:2412.13178)": (
+        "针对 embodied agent（具身智能体）任务规划的安全评测，"
+        "仅测 8-9 个 agent，规模和侧重点都不同。"
+        "面试中如果只说 'SafeAgentBench 2000 用例'，是把两个基准混淆了。"
+    ),
+    "Agent-SafetyBench (arXiv:2412.14470)": (
+        "本节描述的清华团队基准，2000 用例 + 16 个主流 LLM Agent 全部 <60%"
+    ),
 }
 ```
 
@@ -160,10 +184,14 @@ defense_strategies = {
 
 3. **追问："Prompt Injection 能完全防住吗？"** — 目前没有任何方案能 100% 防御 Prompt Injection，因为 LLM 在架构层面无法严格区分指令和数据。最佳实践是纵深防御 + 最小权限 + 人工审核关键操作，将风险降到可接受水平。
 
-4. **追问："如何评估 Agent 的安全性？"** — (1) 使用 SafeAgentBench 等安全基准测试；(2) Red Teaming——组织专门团队尝试攻破 Agent；(3) 自动化安全测试集成到 CI/CD；(4) 持续监控生产环境的异常行为。
+4. **追问："如何评估 Agent 的安全性？"** — (1) 使用 **Agent-SafetyBench**（清华 2024-12，2000 用例 + 16 Agent）等安全基准测试，注意与名字相近的 SafeAgentBench（embodied 任务规划基准）区分；(2) Red Teaming——组织专门团队尝试攻破 Agent；(3) 自动化安全测试集成到 CI/CD；(4) 持续监控生产环境的异常行为。
 
 ## 参考资料
 
+- [The Lethal Trifecta for AI Agents (Simon Willison, 2025-06)](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/)
+- [Agent-SafetyBench: Evaluating the Safety of LLM Agents (arXiv:2412.14470)](https://arxiv.org/abs/2412.14470)
+- [SafeAgentBench (arXiv:2412.13178) — 区分对比基准](https://arxiv.org/abs/2412.13178)
+- [Agents Rule of Two (Meta AI Blog, 2025-10-31)](https://ai.meta.com/blog/practical-ai-agent-security/)
 - [Agentic AI and Security (Martin Fowler)](https://martinfowler.com/articles/agentic-ai-security.html)
 - [The Definitive LLM Security Guide: OWASP Top 10 2025 (Confident AI)](https://www.confident-ai.com/blog/the-comprehensive-guide-to-llm-security)
 - [LLM Security in 2025: Key Risks, Best Practices & Trends (Mend.io)](https://www.mend.io/blog/llm-security-risks-mitigations-whats-next/)

@@ -60,7 +60,12 @@ good_prompt = """
 
 ```python
 # LLM 对 Prompt 开头和结尾的内容关注度最高（Primacy + Recency Effect）
-# 最重要的指令放在最前面
+# 这与 Liu et al. 的 "Lost in the Middle" 实证结论是同一个现象的两面：
+#   - 开头注意力强 → Primacy
+#   - 结尾注意力强 → Recency
+#   - 中间最易被忽略 → "Lost in the Middle"
+# 因此最重要的指令放在最前面，关键约束在结尾再重复一次（"夹心饼干"策略），
+# 把易遗忘的中间区留给参考资料而非硬指令。
 
 system_prompt = """
 【最重要】你必须始终使用 JSON 格式输出。任何情况下都不要输出纯文本。
@@ -76,7 +81,7 @@ system_prompt = """
 
 【再次强调】输出必须是合法的 JSON，不要添加任何 JSON 之外的文本。
 """
-# 在开头和结尾重复关键约束（"夹心饼干"策略）
+# 在开头和结尾重复关键约束（"夹心饼干"策略），正是对 Lost in the Middle 的工程性补偿
 ```
 
 ### 原则 3：正向指令优于否定指令
@@ -207,7 +212,7 @@ testing_checklist = [
 
 ## 常见误区 / 面试追问
 
-1. **误区："System Prompt 越长越好"** — 过长的 System Prompt 会产生"指令淹没"——关键指令被大量次要信息稀释。研究表明 LLM 对长 Prompt 的中间部分关注度最低（Lost in the Middle 效应）。最佳实践是保持核心指令简洁（500-1500 词），用分层结构组织。
+1. **误区："System Prompt 越长越好"** — 过长的 System Prompt 会产生"指令淹没"——关键指令被大量次要信息稀释。研究表明 LLM 对长 Prompt 的中间部分关注度最低（Liu et al. 2023 "Lost in the Middle"），与"夹心饼干"策略（开头+结尾重复关键约束）正好形成对照：把硬指令放两端、把可参考的资料/示例放中间，是缓解 Lost in the Middle 的标准工程套路。最佳实践是保持核心指令简洁（500-1500 词），用分层结构组织。
 
 2. **误区："System Prompt 是安全的，用户看不到"** — System Prompt 可以通过 Prompt Injection 被泄露。不要在 System Prompt 中放置真正的密钥或敏感信息。安全逻辑应在应用层实现，不能完全依赖 System Prompt。
 

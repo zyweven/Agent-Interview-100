@@ -123,7 +123,7 @@ class OpenAIAdapter:
 
 class AnthropicAdapter:
     """Anthropic LLM 适配器"""
-    def __init__(self, model: str = "claude-sonnet-4-6"):
+    def __init__(self, model: str = "claude-sonnet-4-5"):
         import anthropic
         self.client = anthropic.AsyncAnthropic()
         self.model = model
