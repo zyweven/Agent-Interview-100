@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Interview 100</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Refined OKLCH palette with warm tint */
+            --primary: oklch(55% 0.18 270);
+            --primary-light: oklch(70% 0.12 270);
+            --primary-dim: oklch(45% 0.08 270);
+            --bg: oklch(14% 0.01 250);
+            --bg-elevated: oklch(18% 0.015 250);
+            --bg-surface: oklch(22% 0.02 250);
+            --text: oklch(92% 0.01 250);
+            --text-secondary: oklch(65% 0.015 250);
+            --text-muted: oklch(50% 0.01 250);
+            --border: oklch(28% 0.015 250);
+            --border-subtle: oklch(24% 0.01 250);
+
+            /* Semantic colors */
+            --success: oklch(65% 0.15 155);
+            --warning: oklch(75% 0.15 75);
+            --danger: oklch(60% 0.2 25);
+
+            /* Spacing (4pt base) */
+            --space-1: 0.25rem;
+            --space-2: 0.5rem;
+            --space-3: 0.75rem;
+            --space-4: 1rem;
+            --space-5: 1.25rem;
+            --space-6: 1.5rem;
+            --space-8: 2rem;
+            --space-10: 2.5rem;
+            --space-12: 3rem;
+            --space-16: 4rem;
+
+            /* Typography */
+            --font-serif: 'Noto Serif SC', Georgia, 'Times New Roman', serif;
+            --font-sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 1.875rem;
+
+            /* Layout */
+            --header-height: 56px;
+            --sidebar-width: 220px;
+            --content-max: 720px;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--bg);
+            border-bottom: 1px solid var(--border-subtle);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 var(--space-6);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-icon {
+            font-size: 1.5rem;
+        }
+
+        .logo-text {
+            font-family: var(--font-serif);
+            font-size: var(--text-lg);
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .menu-toggle {
+            display: none;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            border-radius: 6px;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .menu-toggle:hover {
+            background: var(--bg-surface);
+        }
+
+        .header-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: var(--space-2) var(--space-4);
+            padding-left: 2.5rem;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: var(--text-sm);
+            font-family: var(--font-sans);
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--bg-elevated);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: var(--space-3);
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+            pointer-events: none;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-6);
+            width: var(--sidebar-width);
+            justify-content: flex-end;
+        }
+
+        .stats-mini {
+            display: flex;
+            gap: var(--space-4);
+            color: var(--text-secondary);
+            font-size: var(--text-xs);
+        }
+
+        .stat-mini {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+
+        .stat-mini strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: var(--header-height);
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--bg);
+            border-right: 1px solid var(--border-subtle);
+            overflow-y: auto;
+            padding: var(--space-4);
+            transition: transform 0.3s ease;
+            z-index: 50;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        .sidebar-section {
+            margin-bottom: var(--space-4);
+        }
+
+        .sidebar-section-title {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: var(--space-2) var(--space-3);
+            margin-bottom: var(--space-1);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: 6px;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .sidebar-item.active {
+            background: var(--primary-dim);
+            color: var(--text);
+        }
+
+        .sidebar-item .icon {
+            font-size: var(--text-base);
+            flex-shrink: 0;
+        }
+
+        .sidebar-item .label {
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-item .count {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            padding: 2px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-item.active .count {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-item.back-link {
+            color: var(--text-muted);
+            border: 1px dashed var(--border);
+            margin-bottom: var(--space-3);
+        }
+
+        .sidebar-item.back-link:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+        }
+
+        /* ===== NEW SIDEBAR ===== */
+        .sidebar-module {
+            margin-bottom: var(--space-2);
+        }
+
+        .sidebar-module-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: 6px;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .sidebar-module-header:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .sidebar-module.active > .sidebar-module-header {
+            background: var(--primary-dim);
+            color: var(--text);
+        }
+
+        .sidebar-module-icon {
+            font-size: var(--text-base);
+        }
+
+        .sidebar-module-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .sidebar-module-count {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .sidebar-module.active .sidebar-module-count {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-module-articles {
+            padding-left: var(--space-4);
+            margin-top: var(--space-1);
+        }
+
+        .sidebar-module-articles.collapsed {
+            display: none;
+        }
+
+        .sidebar-article {
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            border-radius: 4px;
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            line-height: 1.4;
+        }
+
+        .sidebar-article:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .sidebar-article.active {
+            background: var(--primary-dim);
+            color: var(--primary-light);
+        }
+
+        .sidebar-article-num {
+            flex-shrink: 0;
+            font-weight: 600;
+            opacity: 0.6;
+        }
+
+        .sidebar-article-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* ===== CONTENT ===== */
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: var(--space-8);
+        }
+
+        .content-inner {
+            max-width: var(--content-max);
+            margin: 0 auto;
+        }
+
+        /* ===== MODULES LIST ===== */
+        .modules-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-6);
+        }
+
+        .module-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .module-card:hover {
+            border-color: var(--border);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-5);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .module-header:hover {
+            background: var(--bg-surface);
+        }
+
+        .module-icon {
+            font-size: 1.75rem;
+            flex-shrink: 0;
+        }
+
+        .module-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .module-title {
+            font-family: var(--font-serif);
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .module-desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .module-count-badge {
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            padding: var(--space-1) var(--space-3);
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .module-articles {
+            border-top: 1px solid var(--border-subtle);
+            padding: var(--space-2);
+        }
+
+        .module-articles.collapsed {
+            display: none;
+        }
+
+        .article-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            border-radius: 8px;
+            font-size: var(--text-sm);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .article-item:hover {
+            background: var(--bg-surface);
+        }
+
+        .article-item .num {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            color: var(--primary);
+            background: var(--bg-surface);
+            padding: var(--space-1) var(--space-2);
+            border-radius: 4px;
+            min-width: 40px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .article-item .title {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .article-item .badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+
+        .badge-basic {
+            background: oklch(65% 0.15 155 / 0.15);
+            color: var(--success);
+        }
+
+        .badge-intermediate {
+            background: oklch(70% 0.15 75 / 0.15);
+            color: var(--warning);
+        }
+
+        .badge-advanced {
+            background: oklch(60% 0.18 25 / 0.15);
+            color: var(--danger);
+        }
+
+        .badge-new {
+            background: oklch(55% 0.12 270 / 0.15);
+            color: var(--primary-light);
+        }
+
+        /* ===== SEARCH RESULTS ===== */
+        .search-results {
+            display: none;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .search-results-header {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .search-result-item {
+            display: block;
+            padding: var(--space-4);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            margin-bottom: var(--space-3);
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s ease;
+        }
+
+        .search-result-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .search-result-module {
+            font-size: var(--text-xs);
+            color: var(--primary-light);
+            margin-bottom: var(--space-2);
+        }
+
+        .search-result-title {
+            font-family: var(--font-serif);
+            font-size: var(--text-base);
+            font-weight: 500;
+            margin-bottom: var(--space-1);
+        }
+
+        .search-result-title mark {
+            background: oklch(55% 0.12 270 / 0.25);
+            color: var(--text);
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .search-result-title .badge {
+            margin-left: var(--space-2);
+            vertical-align: middle;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: var(--space-16) var(--space-4);
+            color: var(--text-muted);
+        }
+
+        .no-results-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-4);
+        }
+
+        /* ===== ARTICLE VIEW ===== */
+        .article-view {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .article-back {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: var(--space-8);
+            font-family: var(--font-sans);
+        }
+
+        .article-back:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+
+        .article-header {
+            margin-bottom: var(--space-8);
+            padding-bottom: var(--space-6);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            flex-wrap: wrap;
+        }
+
+        .article-module-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            background: var(--primary-dim);
+            color: var(--primary-light);
+            border-radius: 6px;
+            font-size: var(--text-xs);
+            font-weight: 500;
+        }
+
+        .article-num {
+            font-size: var(--text-sm);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .article-title {
+            font-family: var(--font-serif);
+            font-size: var(--text-3xl);
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--text);
+            letter-spacing: -0.02em;
+        }
+
+        /* ===== ARTICLE CONTENT ===== */
+        .article-content {
+            font-family: var(--font-serif);
+            font-size: var(--text-lg);
+            line-height: 1.85;
+            color: var(--text);
+        }
+
+        .article-body > * + * {
+            margin-top: 1.25em;
+        }
+
+        .article-body > h1,
+        .article-body > h2,
+        .article-body > h3,
+        .article-body > h4 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .article-body > h1:first-child,
+        .article-body > h2:first-child {
+            margin-top: 0;
+        }
+
+        .article-body p:empty {
+            display: none;
+        }
+
+        .article-body h1 {
+            font-size: 1.75em;
+            font-weight: 700;
+            margin-top: 2em;
+            margin-bottom: 0.75em;
+            color: var(--text);
+            letter-spacing: -0.01em;
+        }
+
+        .article-body h2 {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-top: 2em;
+            margin-bottom: 0.6em;
+            color: var(--text);
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .article-body h3 {
+            font-size: 1.15em;
+            font-weight: 600;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            color: var(--text);
+        }
+
+        .article-body h4 {
+            font-size: 1em;
+            font-weight: 600;
+            margin-top: 1.25em;
+            margin-bottom: 0.4em;
+            color: var(--primary-light);
+        }
+
+        .article-body p {
+            margin-bottom: 1em;
+        }
+
+        .article-body blockquote {
+            border-left: 3px solid var(--primary);
+            padding: var(--space-4) var(--space-5);
+            margin: 1.5em 0;
+            background: var(--bg-surface);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        .article-body blockquote p {
+            margin-bottom: 0.5em;
+        }
+
+        .article-body blockquote p:last-child {
+            margin-bottom: 0;
+        }
+
+        .article-body pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: var(--space-4);
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .article-body code {
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.9em;
+            background: var(--bg-surface);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            color: var(--primary-light);
+        }
+
+        .article-body pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text);
+        }
+
+        .article-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5em 0;
+            font-family: var(--font-sans);
+            font-size: 0.9em;
+        }
+
+        .article-body th,
+        .article-body td {
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .article-body th {
+            background: var(--bg-surface);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .article-body li {
+            margin-bottom: 0.5em;
+        }
+
+        .article-body a {
+            color: var(--primary-light);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.15s ease;
+        }
+
+        .article-body a:hover {
+            border-bottom-color: var(--primary-light);
+        }
+
+        .article-body hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2em 0;
+        }
+
+        .article-body strong {
+            font-weight: 600;
+        }
+
+        .article-body em {
+            font-style: italic;
+        }
+
+        /* ===== ARTICLE SIDEBAR (TOC) ===== */
+        .article-toc {
+            position: fixed;
+            right: 2rem;
+            top: calc(var(--header-height) + 2rem);
+            width: 200px;
+            max-height: calc(100vh - var(--header-height) - 4rem);
+            overflow-y: auto;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: var(--space-4);
+            display: none;
+        }
+
+        .article-toc.visible {
+            display: block;
+        }
+
+        .article-toc-title {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: var(--space-3);
+        }
+
+        .article-toc-list {
+            list-style: none;
+        }
+
+        .article-toc-item {
+            margin-bottom: var(--space-2);
+        }
+
+        .article-toc-link {
+            display: block;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: var(--space-1) var(--space-2);
+            border-radius: 4px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .article-toc-link:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .article-toc-link.active {
+            background: var(--primary-dim);
+            color: var(--primary-light);
+        }
+
+        .article-toc-link.level-3 {
+            padding-left: var(--space-4);
+            font-size: 11px;
+        }
+
+        .article-toc-link.level-4 {
+            padding-left: var(--space-6);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .article-toc-module {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            padding: var(--space-2) var(--space-2);
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .article-toc-current {
+            font-size: var(--text-xs);
+            color: var(--primary-light);
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .article-source-inline {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: var(--space-6);
+            opacity: 0.4;
+            font-family: var(--font-sans);
+        }
+
+        .article-source-inline:hover {
+            opacity: 0.8;
+        }
+
+        /* ===== ARTICLE FOOTER NAV ===== */
+        .article-footer-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-4);
+            margin-top: var(--space-12);
+            padding-top: var(--space-6);
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-family: var(--font-sans);
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            background: var(--bg-surface);
+        }
+
+        .nav-btn-label {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .nav-btn-title {
+            font-size: var(--text-sm);
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .nav-btn.next {
+            text-align: right;
+            grid-column: 2;
+        }
+
+        .nav-btn.prev {
+            grid-column: 1;
+        }
+
+        /* ===== LOADING ===== */
+        .loading {
+            text-align: center;
+            padding: var(--space-16);
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto var(--space-4);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 200px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --header-height: 52px;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+            }
+
+            .content {
+                margin-left: 0;
+                padding: var(--space-5);
+            }
+
+            .header-left {
+                width: auto;
+            }
+
+            .header-right {
+                width: auto;
+            }
+
+            .stats-mini {
+                display: none;
+            }
+
+            .article-title {
+                font-size: var(--text-2xl);
+            }
+
+            .article-content {
+                font-size: var(--text-base);
+            }
+
+            .article-footer-nav {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-btn.next {
+                grid-column: 1;
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .search-container {
+                display: none;
+            }
+
+            .content {
+                padding: var(--space-4);
+            }
+
+            .article-toc {
+                display: none !important;
+            }
+
+            .module-header {
+                padding: var(--space-4);
+            }
+
+            .article-item {
+                padding: var(--space-2) var(--space-3);
+            }
+
+            .article-item .title {
+                font-size: var(--text-xs);
+            }
+        }
+
+        /* ===== SCROLL BEHAVIOR ===== */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* ===== UTILITIES ===== */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">☰</button>
+            <a href="#" class="logo" onclick="goBack(); return false;">
+                <span class="logo-icon">🤖</span>
+                <span class="logo-text">Agent 100</span>
+            </a>
+        </div>
+        <div class="header-center">
+            <div class="search-container">
+                <span class="search-icon">⌕</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索问题...">
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="stats-mini">
+                <span class="stat-mini"><strong>100</strong> 题</span>
+                <span class="stat-mini"><strong>11</strong> 模块</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="main">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-item active" data-module="all" onclick="filterByModule('all')">
+                    <span class="icon">📚</span>
+                    <span class="label">全部问题</span>
+                    <span class="count">100</span>
+                </div>
+            </div>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">模块</div>
+                <div class="sidebar-item" data-module="01-agent-architecture" onclick="filterByModule('01-agent-architecture')">
+                    <span class="icon">🏛️</span>
+                    <span class="label">Agent 架构</span>
+                    <span class="count">9</span>
+                </div>
+                <div class="sidebar-item" data-module="02-rag" onclick="filterByModule('02-rag')">
+                    <span class="icon">🔍</span>
+                    <span class="label">RAG</span>
+                    <span class="count">10</span>
+                </div>
+                <div class="sidebar-item" data-module="03-tool-use" onclick="filterByModule('03-tool-use')">
+                    <span class="icon">🔧</span>
+                    <span class="label">工具使用</span>
+                    <span class="count">10</span>
+                </div>
+                <div class="sidebar-item" data-module="04-multi-agent" onclick="filterByModule('04-multi-agent')">
+                    <span class="icon">🤝</span>
+                    <span class="label">多 Agent</span>
+                    <span class="count">10</span>
+                </div>
+                <div class="sidebar-item" data-module="05-memory-and-state" onclick="filterByModule('05-memory-and-state')">
+                    <span class="icon">🧠</span>
+                    <span class="label">记忆与状态</span>
+                    <span class="count">8</span>
+                </div>
+                <div class="sidebar-item" data-module="06-planning-and-reasoning" onclick="filterByModule('06-planning-and-reasoning')">
+                    <span class="icon">🧩</span>
+                    <span class="label">规划与推理</span>
+                    <span class="count">9</span>
+                </div>
+                <div class="sidebar-item" data-module="07-prompt-engineering" onclick="filterByModule('07-prompt-engineering')">
+                    <span class="icon">✍️</span>
+                    <span class="label">提示工程</span>
+                    <span class="count">11</span>
+                </div>
+                <div class="sidebar-item" data-module="08-evaluation" onclick="filterByModule('08-evaluation')">
+                    <span class="icon">📊</span>
+                    <span class="label">评估</span>
+                    <span class="count">8</span>
+                </div>
+                <div class="sidebar-item" data-module="09-safety-and-alignment" onclick="filterByModule('09-safety-and-alignment')">
+                    <span class="icon">🛡️</span>
+                    <span class="label">安全与对齐</span>
+                    <span class="count">8</span>
+                </div>
+                <div class="sidebar-item" data-module="10-production-and-deployment" onclick="filterByModule('10-production-and-deployment')">
+                    <span class="icon">🚀</span>
+                    <span class="label">生产部署</span>
+                    <span class="count">12</span>
+                </div>
+                <div class="sidebar-item" data-module="11-frameworks" onclick="filterByModule('11-frameworks')">
+                    <span class="icon">🧰</span>
+                    <span class="label">框架选型</span>
+                    <span class="count">5</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="content-inner" id="content">
+                <!-- Dynamic content -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ===== DATA =====
+        const modules = [
+            {
+                id: '01-agent-architecture',
+                icon: '🏛️',
+                name: 'Agent 架构',
+                description: 'Agent 系统的核心设计理念',
+                articles: [
+                    { num: '001', title: '什么是 LLM Agent？与传统 LLM 应用有何区别？', difficulty: 'basic' },
+                    { num: '002', title: '解释 Agent 的核心组件：感知、推理、行动、记忆', difficulty: 'basic' },
+                    { num: '003', title: 'Agent 架构模式详解：ReAct、Plan-and-Execute、LATS、Proactive', difficulty: 'intermediate' },
+                    { num: '005', title: '如何设计一个分层 Agent 架构（Orchestrator / Worker 模式）？', difficulty: 'intermediate' },
+                    { num: '006', title: 'Agent Loop 设计：循环控制、终止条件与错误恢复', difficulty: 'intermediate' },
+                    { num: '007', title: 'Workflow vs Agent：什么时候用确定性工作流，什么时候用自主 Agent？', difficulty: 'intermediate' },
+                    { num: '009', title: '如何实现 Agent 的自我反思（Self-Reflection）和自我纠正？', difficulty: 'intermediate' },
+                    { num: '010', title: '生产级 Agent 系统设计（含智能客服实战案例）', difficulty: 'advanced' },
+                    { num: '108', title: '面试追问链：从「什么是 Agent」到系统设计的 10 层递进追问', difficulty: 'advanced' }
+                ]
+            },
+            {
+                id: '02-rag',
+                icon: '🔍',
+                name: 'RAG',
+                description: '检索增强生成全链路知识',
+                articles: [
+                    { num: '011', title: '什么是 RAG？它解决了 LLM 的哪些核心局限？', difficulty: 'basic' },
+                    { num: '012', title: 'RAG Pipeline 的核心组件：Indexing、Retrieval、Generation', difficulty: 'basic' },
+                    { num: '013', title: '文档分块（Chunking）策略有哪些？各有什么优缺点？', difficulty: 'intermediate' },
+                    { num: '014', title: '向量数据库选型：Pinecone vs Weaviate vs Chroma vs Milvus', difficulty: 'intermediate' },
+                    { num: '015', title: 'Embedding 模型选择与微调策略', difficulty: 'intermediate' },
+                    { num: '016', title: '混合检索：如何结合语义检索和关键词检索？', difficulty: 'intermediate' },
+                    { num: '017', title: 'Re-ranking 的原理与实现：Cross-Encoder vs Bi-Encoder', difficulty: 'intermediate' },
+                    { num: '018', title: '什么是 Agentic RAG？它与传统 RAG 有何不同？', difficulty: 'intermediate' },
+                    { num: '019', title: '高级 RAG 变体：Corrective RAG、Self-RAG、Adaptive RAG', difficulty: 'advanced' },
+                    { num: '020', title: 'RAG 评估指标体系：原理、计算与实战', difficulty: 'advanced' }
+                ]
+            },
+            {
+                id: '03-tool-use',
+                icon: '🔧',
+                name: '工具使用',
+                description: 'LLM 与外部工具的交互',
+                articles: [
+                    { num: '021', title: '什么是 Function Calling？它是如何工作的？', difficulty: 'basic' },
+                    { num: '022', title: '如何为 LLM 定义和描述工具（Tool Schema）？', difficulty: 'intermediate' },
+                    { num: '023', title: 'Tool Use 的常见模式：API 调用、数据库查询、代码执行', difficulty: 'intermediate' },
+                    { num: '024', title: '如何设计 Tool Gateway 和工具权限管理？', difficulty: 'intermediate' },
+                    { num: '025', title: '工具选择策略：LLM 如何决定使用哪个工具？', difficulty: 'intermediate' },
+                    { num: '026', title: '如何处理工具调用失败和超时？', difficulty: 'intermediate' },
+                    { num: '027', title: 'MCP（Model Context Protocol）是什么？', difficulty: 'intermediate' },
+                    { num: '028', title: '并行工具调用 vs 顺序工具调用的设计考量', difficulty: 'intermediate' },
+                    { num: '029', title: '如何实现动态工具发现和注册？', difficulty: 'advanced' },
+                    { num: '030', title: '工具使用的安全性：防止注入攻击和越权操作', difficulty: 'advanced' }
+                ]
+            },
+            {
+                id: '04-multi-agent',
+                icon: '🤝',
+                name: '多 Agent',
+                description: '多 Agent 协作系统的设计',
+                articles: [
+                    { num: '031', title: '什么是多 Agent 系统？与单 Agent 相比有何优势？', difficulty: 'basic' },
+                    { num: '032', title: '多 Agent 通信模式：消息传递、共享状态、黑板模式', difficulty: 'intermediate' },
+                    { num: '033', title: 'Agent 编排模式：Hub-Spoke、Pipeline、Hierarchical', difficulty: 'intermediate' },
+                    { num: '034', title: '如何设计 Agent 间的任务分配与协调？', difficulty: 'intermediate' },
+                    { num: '035', title: '多 Agent 系统中的冲突解决机制', difficulty: 'intermediate' },
+                    { num: '036', title: '比较主流多 Agent 框架：CrewAI、AutoGen、LangGraph', difficulty: 'intermediate' },
+                    { num: '037', title: '如何实现 Agent 间的 Handoff（任务交接）？', difficulty: 'intermediate' },
+                    { num: '038', title: '多 Agent 系统中的涌现行为与可控性', difficulty: 'advanced' },
+                    { num: '039', title: '如何调试和监控多 Agent 系统？', difficulty: 'advanced' },
+                    { num: '101', title: 'A2A（Agent-to-Agent）协议是什么？', difficulty: 'intermediate', isNew: true }
+                ]
+            },
+            {
+                id: '05-memory-and-state',
+                icon: '🧠',
+                name: '记忆与状态',
+                description: 'Agent 的记忆管理系统',
+                articles: [
+                    { num: '040', title: 'Agent 记忆的类型：短期记忆、长期记忆、工作记忆', difficulty: 'basic' },
+                    { num: '041', title: '对话上下文窗口管理与压缩策略', difficulty: 'intermediate' },
+                    { num: '043', title: '如何实现 Agent 的持久化记忆？', difficulty: 'intermediate' },
+                    { num: '044', title: '状态管理在 Agent 系统中的设计模式', difficulty: 'intermediate' },
+                    { num: '045', title: '如何实现跨会话的用户偏好学习？', difficulty: 'intermediate' },
+                    { num: '046', title: '向量记忆 vs 结构化记忆：何时使用哪种？', difficulty: 'intermediate' },
+                    { num: '047', title: '设计 Agent 的知识图谱记忆系统', difficulty: 'advanced' },
+                    { num: '048', title: '记忆的遗忘与更新机制', difficulty: 'advanced' }
+                ]
+            },
+            {
+                id: '06-planning-and-reasoning',
+                icon: '🧩',
+                name: '规划与推理',
+                description: 'LLM 的推理能力增强',
+                articles: [
+                    { num: '049', title: '推理策略详解：Chain-of-Thought 与 Tree-of-Thought', difficulty: 'basic' },
+                    { num: '050', title: '任务分解（Task Decomposition）的基本方法', difficulty: 'intermediate' },
+                    { num: '052', title: 'Plan-and-Solve 与动态重规划', difficulty: 'intermediate' },
+                    { num: '053', title: 'LLM 作为规划器的局限性与缓解方案', difficulty: 'intermediate' },
+                    { num: '055', title: 'Reasoning 模型（o1/o3/DeepSeek-R1）vs 标准模型', difficulty: 'intermediate' },
+                    { num: '056', title: 'Monte Carlo Tree Search 在 Agent 规划中的应用', difficulty: 'advanced' },
+                    { num: '057', title: '如何评估 Agent 的推理质量？', difficulty: 'intermediate' },
+                    { num: '058', title: '因果推理在 Agent 决策中的作用', difficulty: 'advanced' },
+                    { num: '103', title: 'Agentic-RL 是什么？如何用 GRPO 训练 Agent？', difficulty: 'advanced', isNew: true }
+                ]
+            },
+            {
+                id: '07-prompt-engineering',
+                icon: '✍️',
+                name: '提示工程',
+                description: 'Prompt 设计与优化',
+                articles: [
+                    { num: '059', title: 'System Prompt 设计的核心原则', difficulty: 'basic' },
+                    { num: '060', title: 'Few-Shot vs Zero-Shot Prompting：如何选择？', difficulty: 'basic' },
+                    { num: '061', title: '结构化输出：如何让 LLM 返回 JSON/XML？', difficulty: 'intermediate' },
+                    { num: '062', title: 'Agentic Prompting：如何编写自主执行任务的 Prompt？', difficulty: 'intermediate' },
+                    { num: '063', title: 'Prompt Chaining：多步骤 Prompt 的设计与编排', difficulty: 'intermediate' },
+                    { num: '064', title: '如何防止 Prompt Injection 攻击？', difficulty: 'intermediate' },
+                    { num: '065', title: 'DSPy 等编程化 Prompt 优化工具的原理与使用', difficulty: 'intermediate' },
+                    { num: '066', title: 'Prompt 版本管理与 A/B 测试', difficulty: 'intermediate' },
+                    { num: '067', title: 'Meta-Prompting：让 LLM 自动生成和优化 Prompt', difficulty: 'advanced' },
+                    { num: '068', title: '跨模型 Prompt 迁移：如何编写模型无关的 Prompt？', difficulty: 'intermediate' },
+                    { num: '102', title: '什么是 Context Engineering？', difficulty: 'intermediate', isNew: true }
+                ]
+            },
+            {
+                id: '08-evaluation',
+                icon: '📊',
+                name: '评估',
+                description: 'Agent 系统的评估方法',
+                articles: [
+                    { num: '069', title: '评估方法论：从 LLM 评估到 Agent 评估', difficulty: 'basic' },
+                    { num: '071', title: 'LLM-as-Judge：使用 LLM 评估 LLM 输出', difficulty: 'intermediate' },
+                    { num: '072', title: 'Agent Benchmark：如何设计端到端的 Agent 测试？', difficulty: 'intermediate' },
+                    { num: '073', title: '回归测试：如何检测 Agent 性能退化？', difficulty: 'intermediate' },
+                    { num: '074', title: 'Trace 和 Span：Agent 执行的可观测性', difficulty: 'intermediate' },
+                    { num: '075', title: '评估工具对比：Ragas、LangSmith、Braintrust', difficulty: 'intermediate' },
+                    { num: '076', title: '静态 Benchmark 的陷阱', difficulty: 'advanced' },
+                    { num: '077', title: '如何构建持续评估流水线？', difficulty: 'advanced' }
+                ]
+            },
+            {
+                id: '09-safety-and-alignment',
+                icon: '🛡️',
+                name: '安全与对齐',
+                description: 'Agent 系统的安全风险防控',
+                articles: [
+                    { num: '078', title: 'LLM Agent 的主要安全风险有哪些？', difficulty: 'basic' },
+                    { num: '079', title: '什么是 Guardrails？如何为 Agent 设置安全护栏？', difficulty: 'intermediate' },
+                    { num: '080', title: 'Human-in-the-Loop：何时以及如何引入人工审核？', difficulty: 'intermediate' },
+                    { num: '081', title: 'Agent 的权限最小化原则与沙箱执行', difficulty: 'intermediate' },
+                    { num: '082', title: '如何检测和缓解 Agent 的幻觉？', difficulty: 'intermediate' },
+                    { num: '083', title: '内容过滤与毒性检测在 Agent 系统中的实现', difficulty: 'intermediate' },
+                    { num: '084', title: 'Agent 对齐问题：如何确保行为符合人类意图？', difficulty: 'advanced' },
+                    { num: '085', title: 'Red Teaming：如何对 Agent 系统进行对抗测试？', difficulty: 'advanced' }
+                ]
+            },
+            {
+                id: '10-production-and-deployment',
+                icon: '🚀',
+                name: '生产部署',
+                description: '从开发到生产的全链路实践',
+                articles: [
+                    { num: '086', title: 'LLMOps 是什么？与传统 MLOps 有何区别？', difficulty: 'basic' },
+                    { num: '087', title: 'Agent 系统的基本部署架构', difficulty: 'intermediate' },
+                    { num: '088', title: 'LLM API 的成本优化策略', difficulty: 'intermediate' },
+                    { num: '089', title: '模型路由：如何根据任务复杂度选择模型？', difficulty: 'intermediate' },
+                    { num: '090', title: 'Agent 系统的延迟优化：Streaming、缓存、批处理', difficulty: 'intermediate' },
+                    { num: '091', title: 'Prompt Drift 管理：如何避免 Prompt 退化？', difficulty: 'intermediate' },
+                    { num: '092', title: 'Agent 系统的日志、监控与告警设计', difficulty: 'intermediate' },
+                    { num: '093', title: '如何实现 Agent 的灰度发布和 A/B 测试？', difficulty: 'intermediate' },
+                    { num: '094', title: '高并发场景下的 Agent 系统扩展策略', difficulty: 'advanced' },
+                    { num: '095', title: 'Agent 系统的灾难恢复与高可用设计', difficulty: 'advanced' },
+                    { num: '104', title: '场景题：Agent 在生产环境出了故障如何排查？', difficulty: 'advanced', isNew: true },
+                    { num: '107', title: '代码 Review 题：找出 Agent 代码中的设计问题', difficulty: 'advanced', isNew: true }
+                ]
+            },
+            {
+                id: '11-frameworks',
+                icon: '🧰',
+                name: '框架选型',
+                description: '主流 Agent 框架对比分析',
+                articles: [
+                    { num: '096', title: '主流 Agent 框架概览：LangChain、LlamaIndex、Haystack', difficulty: 'basic' },
+                    { num: '097', title: 'LangGraph 的核心概念：节点、边、状态', difficulty: 'intermediate' },
+                    { num: '098', title: '框架 vs 自研：什么时候应该自己构建 Agent 框架？', difficulty: 'intermediate' },
+                    { num: '099', title: 'OpenAI Assistants API vs Anthropic Claude Agent SDK', difficulty: 'intermediate' },
+                    { num: '100', title: '如何设计可测试、可扩展的 Agent 框架抽象层？', difficulty: 'advanced' }
+                ]
+            }
+        ];
+
+        const difficultyLabels = {
+            'basic': { text: '基础', class: 'badge-basic' },
+            'intermediate': { text: '中级', class: 'badge-intermediate' },
+            'advanced': { text: '高级', class: 'badge-advanced' }
+        };
+
+        const files = {
+            '01-agent-architecture': ['001-what-is-llm-agent.md', '002-agent-core-components.md', '003-agent-architecture-patterns.md', '005-layered-agent-architecture.md', '006-agent-loop-and-error-recovery.md', '007-workflow-vs-agent.md', '009-self-reflection-correction.md', '010-production-agent-system-design.md', '108-interview-deep-dive-chain.md'],
+            '02-rag': ['011-what-is-rag.md', '012-rag-pipeline-components.md', '013-chunking-strategies.md', '014-vector-database-comparison.md', '015-embedding-model-selection.md', '016-hybrid-retrieval.md', '017-reranking-strategies.md', '018-agentic-rag.md', '019-advanced-rag-variants.md', '020-rag-evaluation-metrics.md'],
+            '03-tool-use': ['021-function-calling-basics.md', '022-tool-schema-design.md', '023-common-tool-patterns.md', '024-tool-gateway-permissions.md', '025-tool-selection-strategy.md', '026-tool-failure-handling.md', '027-model-context-protocol.md', '028-parallel-vs-sequential-tools.md', '029-dynamic-tool-discovery.md', '030-tool-use-security.md'],
+            '04-multi-agent': ['031-what-is-multi-agent.md', '032-communication-patterns.md', '033-orchestration-patterns.md', '034-task-allocation-coordination.md', '035-conflict-resolution.md', '036-multi-agent-frameworks.md', '037-agent-handoff.md', '038-emergent-behavior.md', '039-debugging-monitoring-multi-agent.md', '101-a2a-protocol.md'],
+            '05-memory-and-state': ['040-memory-types.md', '041-context-window-management.md', '043-persistent-memory.md', '044-state-management-patterns.md', '045-cross-session-preferences.md', '046-vector-vs-structured-memory.md', '047-knowledge-graph-memory.md', '048-memory-forgetting-updating.md'],
+            '06-planning-and-reasoning': ['049-cot-and-tot.md', '050-task-decomposition.md', '052-plan-and-solve-replanning.md', '053-llm-planning-limitations.md', '055-reasoning-models.md', '056-mcts-in-agent-planning.md', '057-reasoning-quality-evaluation.md', '058-causal-reasoning.md', '103-agentic-rl-grpo.md'],
+            '07-prompt-engineering': ['059-system-prompt-principles.md', '060-few-shot-vs-zero-shot.md', '061-structured-output.md', '062-agentic-prompting.md', '063-prompt-chaining.md', '064-prompt-injection-defense.md', '065-dspy-programmatic-prompting.md', '066-prompt-versioning-ab-testing.md', '067-meta-prompting.md', '068-cross-model-prompt-portability.md', '102-context-engineering.md'],
+            '08-evaluation': ['069-evaluation-methodology.md', '071-llm-as-judge.md', '072-agent-benchmarks.md', '073-regression-testing.md', '074-traces-and-spans.md', '075-evaluation-tools-comparison.md', '076-static-benchmark-trap.md', '077-continuous-evaluation-pipeline.md'],
+            '09-safety-and-alignment': ['078-agent-safety-risks.md', '079-guardrails-basics.md', '080-human-in-the-loop.md', '081-least-privilege-sandboxing.md', '082-hallucination-detection.md', '083-content-filtering-toxicity.md', '084-agent-alignment.md', '085-red-teaming-agents.md'],
+            '10-production-and-deployment': ['086-llmops-basics.md', '087-deployment-architecture.md', '088-cost-optimization.md', '089-model-routing.md', '090-latency-optimization.md', '091-prompt-drift-management.md', '092-logging-monitoring-alerting.md', '093-canary-ab-testing.md', '094-scaling-strategies.md', '095-disaster-recovery-ha.md', '104-agent-production-troubleshooting.md', '107-agent-code-review.md'],
+            '11-frameworks': ['096-framework-overview.md', '097-langgraph-concepts.md', '098-framework-vs-custom.md', '099-assistants-api-vs-claude-sdk.md', '100-testable-extensible-framework.md']
+        };
+
+        // Build search index
+        let searchIndex = [];
+        modules.forEach(module => {
+            module.articles.forEach(article => {
+                searchIndex.push({
+                    module: module.name,
+                    moduleId: module.id,
+                    icon: module.icon,
+                    num: article.num,
+                    title: article.title,
+                    difficulty: article.difficulty,
+                    isNew: article.isNew
+                });
+            });
+        });
+
+        // ===== STATE =====
+        let currentFilter = 'all';
+
+        // ===== DOM ELEMENTS =====
+        const content = document.getElementById('content');
+        const searchInput = document.getElementById('searchInput');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        // ===== RENDER FUNCTIONS =====
+        function renderModules(filter = 'all') {
+            currentFilter = filter;
+            let filtered = modules;
+
+            if (filter !== 'all') {
+                filtered = modules.filter(m => m.id === filter);
+            }
+
+            content.innerHTML = `
+                <div class="modules-list">
+                    ${filtered.map(module => renderModuleCard(module)).join('')}
+                </div>
+            `;
+        }
+
+        function renderModuleCard(module) {
+            const articlesHtml = module.articles.map(article => {
+                const diff = difficultyLabels[article.difficulty];
+                const badge = article.isNew
+                    ? `<span class="badge badge-new">新</span>`
+                    : `<span class="badge ${diff.class}">${diff.text}</span>`;
+
+                return `
+                    <div class="article-item" onclick="openArticle('${module.id}', '${article.num}')">
+                        <span class="num">#${article.num}</span>
+                        <span class="title">${article.title}</span>
+                        ${badge}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="module-card" id="${module.id}">
+                    <div class="module-header" onclick="toggleModule('${module.id}')">
+                        <span class="module-icon">${module.icon}</span>
+                        <div class="module-info">
+                            <div class="module-title">${module.name}</div>
+                            <div class="module-desc">${module.description}</div>
+                        </div>
+                        <span class="module-count-badge">${module.articles.length} 题</span>
+                    </div>
+                    <div class="module-articles" id="articles-${module.id}">
+                        ${articlesHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleModule(moduleId) {
+            const articles = document.getElementById(`articles-${moduleId}`);
+            if (articles) {
+                articles.classList.toggle('collapsed');
+            }
+        }
+
+        async function openArticle(moduleId, articleNum) {
+            const module = modules.find(m => m.id === moduleId);
+            const article = module?.articles.find(a => a.num === articleNum);
+            if (!article) return;
+
+            closeSidebar();
+            renderSidebar(moduleId, articleNum);
+
+            content.innerHTML = `
+                <div class="article-view">
+                    <button class="article-back" onclick="goBack()">← 返回目录</button>
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const moduleFiles = files[moduleId];
+                let markdown = null;
+                let filename = null;
+
+                if (moduleFiles) {
+                    filename = moduleFiles.find(f => f.startsWith(articleNum + '-'));
+                    if (filename) {
+                        const response = await fetch(`${moduleId}/${filename}`);
+                        if (response.ok) {
+                            markdown = await response.text();
+                        }
+                    }
+                }
+
+                if (markdown) {
+                    renderArticle(markdown, article, module, filename, moduleId);
+                } else {
+                    // Try to show more helpful error
+                    content.innerHTML = `
+                        <div class="article-view">
+                            <button class="article-back" onclick="goBack()">← 返回目录</button>
+                            <div class="no-results">
+                                <div class="no-results-icon">📄</div>
+                                <p>无法加载文章</p>
+                                <p style="font-size: var(--text-sm); margin-top: var(--space-2); color: var(--text-muted);">
+                                    尝试访问: <code>${moduleId}/${filename || articleNum + '-*.md'}</code>
+                                </p>
+                                <p style="font-size: var(--text-xs); margin-top: var(--space-3); color: var(--text-muted);">
+                                    提示：确保已启动本地服务器 (python3 -m http.server 8000)
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                content.innerHTML = `
+                    <div class="article-view">
+                        <button class="article-back" onclick="goBack()">← 返回目录</button>
+                        <div class="no-results">
+                            <div class="no-results-icon">⚠️</div>
+                            <p>加载失败: ${err.message}</p>
+                            <p style="font-size: var(--text-xs); margin-top: var(--space-2); color: var(--text-muted);">
+                                按 F12 查看详细错误
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderArticle(markdown, article, module, filename, moduleId) {
+            const { html, headings } = parseMarkdown(markdown);
+            const diff = difficultyLabels[article.difficulty];
+            const badge = article.isNew
+                ? `<span class="badge badge-new">新</span>`
+                : `<span class="badge ${diff.class}">${diff.text}</span>`;
+
+            const nav = getPrevNextArticles(article.num);
+
+            content.innerHTML = `
+                <div class="article-view">
+                    <button class="article-back" onclick="goBack()">← 返回目录</button>
+
+                    <header class="article-header">
+                        <div class="article-meta">
+                            <span class="article-module-tag">${module.icon} ${module.name}</span>
+                            <span class="article-num">#${article.num}</span>
+                            ${badge}
+                        </div>
+                        <h1 class="article-title">${article.title}</h1>
+                    </header>
+
+                    <article class="article-content">
+                        <div class="article-source-inline">
+                            📄 ${moduleId}/${filename}
+                        </div>
+                        <div class="article-body">${html}</div>
+                    </article>
+
+                    <nav class="article-footer-nav">
+                        ${nav.prev ? `
+                            <button class="nav-btn prev" onclick="openArticle('${nav.prev.moduleId}', '${nav.prev.num}')">
+                                <span class="nav-btn-label">← 上一章</span>
+                                <span class="nav-btn-title">${nav.prev.num} ${nav.prev.title.slice(0, 30)}${nav.prev.title.length > 30 ? '...' : ''}</span>
+                            </button>
+                        ` : '<div></div>'}
+                        ${nav.next ? `
+                            <button class="nav-btn next" onclick="openArticle('${nav.next.moduleId}', '${nav.next.num}')">
+                                <span class="nav-btn-label">下一章 →</span>
+                                <span class="nav-btn-title">${nav.next.num} ${nav.next.title.slice(0, 30)}${nav.next.title.length > 30 ? '...' : ''}</span>
+                            </button>
+                        ` : '<div></div>'}
+                    </nav>
+                </div>
+
+                ${headings.length > 2 ? `
+                    <aside class="article-toc visible" id="articleToc">
+                        <div class="article-toc-title">目录</div>
+                        <ul class="article-toc-list">
+                            ${headings.map(h => `
+                                <li class="article-toc-item">
+                                    <a href="#${h.id}" class="article-toc-link level-${h.level}" data-level="${h.level}">${h.text}</a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div class="article-toc-current">
+                            ${module.icon} ${module.name} · ${module.articles.length} 题
+                        </div>
+                    </aside>
+                ` : ''}
+            `;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function parseMarkdown(md) {
+            // Remove YAML frontmatter
+            md = md.replace(/^---[\s\S]*?---\n/, '');
+
+            const headings = [];
+            let headingCounter = 0;
+
+            // Split into lines for better processing
+            const lines = md.split('\n');
+            const result = [];
+            let inCodeBlock = false;
+            let codeContent = [];
+            let inBlockquote = false;
+            let blockquoteLines = [];
+            let inList = false;
+            let listItems = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+
+                // Code blocks
+                if (line.startsWith('```')) {
+                    if (!inCodeBlock) {
+                        inCodeBlock = true;
+                        codeContent = [];
+                    } else {
+                        result.push(`<pre><code>${escapeHtml(codeContent.join('\n'))}</code></pre>`);
+                        inCodeBlock = false;
+                    }
+                    continue;
+                }
+
+                if (inCodeBlock) {
+                    codeContent.push(line);
+                    continue;
+                }
+
+                // Headers
+                if (line.match(/^#### /)) {
+                    if (inList) { result.push(`<ul>${listItems.join('')}</ul>`); inList = false; listItems = []; }
+                    if (inBlockquote) { result.push(`<blockquote>${blockquoteLines.join('')}</blockquote>`); inBlockquote = false; blockquoteLines = []; }
+                    const text = processInline(line.replace(/^#### /, ''));
+                    const id = `heading-${headingCounter++}`;
+                    headings.push({ level: 4, text, id });
+                    result.push(`<h4 id="${id}">${text}</h4>`);
+                    continue;
+                }
+                if (line.match(/^### /)) {
+                    if (inList) { result.push(`<ul>${listItems.join('')}</ul>`); inList = false; listItems = []; }
+                    if (inBlockquote) { result.push(`<blockquote>${blockquoteLines.join('')}</blockquote>`); inBlockquote = false; blockquoteLines = []; }
+                    const text = processInline(line.replace(/^### /, ''));
+                    const id = `heading-${headingCounter++}`;
+                    headings.push({ level: 3, text, id });
+                    result.push(`<h3 id="${id}">${text}</h3>`);
+                    continue;
+                }
+                if (line.match(/^## /)) {
+                    if (inList) { result.push(`<ul>${listItems.join('')}</ul>`); inList = false; listItems = []; }
+                    if (inBlockquote) { result.push(`<blockquote>${blockquoteLines.join('')}</blockquote>`); inBlockquote = false; blockquoteLines = []; }
+                    const text = processInline(line.replace(/^## /, ''));
+                    const id = `heading-${headingCounter++}`;
+                    headings.push({ level: 2, text, id });
+                    result.push(`<h2 id="${id}">${text}</h2>`);
+                    continue;
+                }
+                if (line.match(/^# /)) {
+                    if (inList) { result.push(`<ul>${listItems.join('')}</ul>`); inList = false; listItems = []; }
+                    if (inBlockquote) { result.push(`<blockquote>${blockquoteLines.join('')}</blockquote>`); inBlockquote = false; blockquoteLines = []; }
+                    const text = processInline(line.replace(/^# /, ''));
+                    const id = `heading-${headingCounter++}`;
+                    headings.push({ level: 1, text, id });
+                    result.push(`<h1 id="${id}">${text}</h1>`);
+                    continue;
+                }
+
+                // Blockquotes
+                if (line.startsWith('> ')) {
+                    if (inList) { result.push(`<ul>${listItems.join('')}</ul>`); inList = false; listItems = []; }
+                    if (!inBlockquote) inBlockquote = true;
+                    blockquoteLines.push(`<p>${processInline(line.replace(/^> /, ''))}</p>`);
+                    continue;
+                } else if (inBlockquote) {
+                    result.push(`<blockquote>${blockquoteLines.join('')}</blockquote>`);
+                    inBlockquote = false;
+                    blockquoteLines = [];
+                }
+
+                // Lists
+                if (line.match(/^[-\*] /) || line.match(/^\d+\. /)) {
+                    inBlockquote = false;
+                    inList = true;
+                    listItems.push(`<li>${processInline(line.replace(/^[-\*]\s/, '').replace(/^\d+\.\s/, ''))}</li>`);
+                    continue;
+                } else if (inList) {
+                    result.push(`<ul>${listItems.join('')}</ul>`);
+                    inList = false;
+                    listItems = [];
+                }
+
+                // Horizontal rule
+                if (line.match(/^---$/)) {
+                    result.push('<hr>');
+                    continue;
+                }
+
+                // Empty lines
+                if (line.trim() === '') {
+                    continue;
+                }
+
+                // Regular paragraphs
+                if (line.trim()) {
+                    result.push(`<p>${processInline(line)}</p>`);
+                }
+            }
+
+            // Close any open blocks
+            if (inList) result.push(`<ul>${listItems.join('')}</ul>`);
+            if (inBlockquote) result.push(`<blockquote>${blockquoteLines.join('')}</blockquote>`);
+
+            // Process tables (need to handle row by row)
+            let html = result.join('\n');
+            const tableRows = [];
+            const tableLines = html.split('\n');
+            let inTable = false;
+            let tableContent = [];
+
+            for (let line of tableLines) {
+                if (line.includes('|')) {
+                    if (!inTable) {
+                        inTable = true;
+                        tableContent = [];
+                    }
+                    const cells = line.split('|').filter(c => c.trim() && !c.trim().match(/^-+$/));
+                    if (cells.length > 0) {
+                        tableContent.push(`<tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr>`);
+                    }
+                } else {
+                    if (inTable) {
+                        tableRows.push(`<table>${tableContent.join('')}</table>`);
+                        inTable = false;
+                        tableContent = [];
+                    }
+                    tableRows.push(line);
+                }
+            }
+            if (inTable) {
+                tableRows.push(`<table>${tableContent.join('')}</table>`);
+            }
+
+            // Filter empty paragraphs and return with headings
+            const filteredHtml = tableRows.filter(line => {
+                if (line === '<p></p>' || line === '<p> </p>') return false;
+                return true;
+            }).join('\n');
+
+            return { html: filteredHtml, headings };
+        }
+
+        function processInline(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function getPrevNextArticles(currentNum) {
+            const allArticles = [];
+            modules.forEach(m => {
+                m.articles.forEach(a => {
+                    allArticles.push({
+                        num: a.num,
+                        title: a.title,
+                        moduleId: m.id
+                    });
+                });
+            });
+            allArticles.sort((a, b) => parseInt(a.num) - parseInt(b.num));
+            const idx = allArticles.findIndex(a => a.num === currentNum);
+            return {
+                prev: idx > 0 ? allArticles[idx - 1] : null,
+                next: idx < allArticles.length - 1 ? allArticles[idx + 1] : null
+            };
+        }
+
+        function goBack() {
+            renderSidebar();
+            renderModules(currentFilter);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function filterByModule(moduleId) {
+            updateSidebarActive(moduleId);
+            renderModules(moduleId);
+            closeSidebar();
+        }
+
+        function updateSidebarActive(moduleId) {
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.module === moduleId);
+            });
+        }
+
+        // Search
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            if (!query) {
+                renderModules(currentFilter);
+                return;
+            }
+
+            const results = searchIndex.filter(item =>
+                item.title.toLowerCase().includes(query) ||
+                item.module.toLowerCase().includes(query) ||
+                item.num.includes(query)
+            );
+
+            renderSearchResults(results, query);
+        });
+
+        function renderSearchResults(results, query) {
+            if (results.length === 0) {
+                content.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <p>没有找到相关内容</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = `
+                <div class="search-results active">
+                    <p class="search-results-header">找到 ${results.length} 个相关结果</p>
+                    ${results.map(item => {
+                        const diff = difficultyLabels[item.difficulty];
+                        const badge = item.isNew
+                            ? `<span class="badge badge-new">新</span>`
+                            : `<span class="badge ${diff.class}">${diff.text}</span>`;
+                        const title = highlightText(item.title, query);
+
+                        return `
+                            <div class="search-result-item" onclick="openArticle('${item.moduleId}', '${item.num}')">
+                                <div class="search-result-module">${item.icon} ${item.module} · #${item.num}</div>
+                                <div class="search-result-title">${title} ${badge}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function highlightText(text, query) {
+            if (!query) return text;
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        // Mobile menu
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+        }
+
+        // Close sidebar on outside click
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 &&
+                !sidebar.contains(e.target) &&
+                !menuToggle.contains(e.target)) {
+                closeSidebar();
+            }
+        });
+
+        // ===== INIT =====
+        renderSidebar();
+        renderModules('all');
+
+        // ===== SIDEBAR RENDERING =====
+        function renderSidebar(currentModuleId = null, currentArticleNum = null) {
+            const sidebar = document.getElementById('sidebar');
+            let html = '';
+
+            // All modules with articles expanded
+            modules.forEach(module => {
+                const isCurrentModule = module.id === currentModuleId;
+                html += `
+                    <div class="sidebar-module ${isCurrentModule ? 'active' : ''}">
+                        <div class="sidebar-module-header" onclick="toggleSidebarModule('${module.id}')">
+                            <span class="sidebar-module-icon">${module.icon}</span>
+                            <span class="sidebar-module-name">${module.name}</span>
+                            <span class="sidebar-module-count">${module.articles.length}</span>
+                        </div>
+                        <div class="sidebar-module-articles" id="sidebar-articles-${module.id}">
+                            ${module.articles.map(article => {
+                                const isActive = isCurrentModule && article.num === currentArticleNum;
+                                return `
+                                    <div class="sidebar-article ${isActive ? 'active' : ''}"
+                                         onclick="openArticle('${module.id}', '${article.num}')">
+                                        <span class="sidebar-article-num">#${article.num}</span>
+                                        <span class="sidebar-article-title">${article.title}</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            sidebar.innerHTML = html;
+        }
+
+        function toggleSidebarModule(moduleId) {
+            const articles = document.getElementById(`sidebar-articles-${moduleId}`);
+            if (articles) {
+                articles.classList.toggle('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki Reader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: oklch(55% 0.18 270);
+            --primary-light: oklch(70% 0.12 270);
+            --primary-dim: oklch(45% 0.08 270);
+            --bg: oklch(14% 0.01 250);
+            --bg-elevated: oklch(18% 0.015 250);
+            --bg-surface: oklch(22% 0.02 250);
+            --text: oklch(92% 0.01 250);
+            --text-secondary: oklch(65% 0.015 250);
+            --text-muted: oklch(50% 0.01 250);
+            --border: oklch(28% 0.015 250);
+            --border-subtle: oklch(24% 0.01 250);
+            --header-height: 56px;
+            --sidebar-width: 240px;
+            --content-max: 720px;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--header-height);
+            background: var(--bg);
+            border-bottom: 1px solid var(--border-subtle);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+        }
+
+        .header-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .header-path {
+            margin-left: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Main Layout */
+        .main {
+            display: flex;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0; top: var(--header-height); bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--bg);
+            border-right: 1px solid var(--border-subtle);
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .sidebar-module {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-module-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .sidebar-module-header:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .sidebar-module.active .sidebar-module-header {
+            background: var(--primary-dim);
+            color: var(--text);
+        }
+
+        .sidebar-module-icon { font-size: 1rem; }
+        .sidebar-module-name { flex: 1; font-weight: 500; }
+        .sidebar-module-count {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .sidebar-module.active .sidebar-module-count {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-articles {
+            padding-left: 1rem;
+            margin-top: 0.25rem;
+        }
+
+        .sidebar-articles.collapsed { display: none; }
+
+        .sidebar-article {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            line-height: 1.4;
+        }
+
+        .sidebar-article:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .sidebar-article.active {
+            background: var(--primary-dim);
+            color: var(--primary-light);
+        }
+
+        .sidebar-article-num {
+            flex-shrink: 0;
+            font-weight: 600;
+            opacity: 0.5;
+        }
+
+        .sidebar-article-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+        }
+
+        .content-inner {
+            max-width: var(--content-max);
+            margin: 0 auto;
+        }
+
+        /* Article View */
+        .article-view {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .article-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-bottom: 2rem;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .article-back:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .article-source {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            opacity: 0.4;
+            font-family: monospace;
+        }
+
+        .article-source:hover { opacity: 0.8; }
+
+        .article-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .article-module-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary-dim);
+            color: var(--primary-light);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .article-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.3;
+            letter-spacing: -0.02em;
+        }
+
+        /* Article Content */
+        .article-content {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1.05rem;
+            line-height: 1.85;
+        }
+
+        .article-content p { margin-bottom: 1em; }
+        .article-content p:empty { display: none; }
+
+        .article-content h1, .article-content h2, .article-content h3, .article-content h4 {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 600;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .article-content h1 { font-size: 1.5em; }
+        .article-content h2 {
+            font-size: 1.3em;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .article-content h3 { font-size: 1.15em; }
+        .article-content h4 { font-size: 1em; color: var(--primary-light); }
+
+        .article-content pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+
+        .article-content code {
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: 0.9em;
+            background: var(--bg-surface);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            color: var(--primary-light);
+        }
+
+        .article-content pre code {
+            background: transparent;
+            padding: 0;
+            color: var(--text);
+        }
+
+        .article-content blockquote {
+            border-left: 3px solid var(--primary);
+            padding: 1rem 1.25rem;
+            background: var(--bg-surface);
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+        }
+
+        .article-content blockquote p { margin-bottom: 0.5em; }
+        .article-content blockquote p:last-child { margin-bottom: 0; }
+
+        .article-content table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            margin: 1.5em 0;
+        }
+
+        .article-content th, .article-content td {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .article-content th {
+            background: var(--bg-surface);
+            font-weight: 600;
+        }
+
+        .article-content a {
+            color: var(--primary-light);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+        }
+
+        .article-content a:hover { border-bottom-color: var(--primary-light); }
+
+        .article-content hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2em 0;
+        }
+
+        .article-content strong { font-weight: 600; }
+        .article-content em { font-style: italic; }
+
+        /* Footer Nav */
+        .article-footer-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            text-align: left;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            background: var(--bg-surface);
+        }
+
+        .nav-btn-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .nav-btn-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .nav-btn.next { grid-column: 2; text-align: right; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Home View */
+        .home-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .module-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: border-color 0.2s;
+        }
+
+        .module-card:hover { border-color: var(--border); }
+
+        .module-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .module-card-icon { font-size: 1.5rem; }
+        .module-card-name {
+            font-family: 'Noto Serif SC', serif;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .module-card-count {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--bg-surface);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .module-card-articles {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .module-card-article {
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .module-card-article:hover {
+            background: var(--bg-surface);
+            color: var(--text);
+        }
+
+        .module-card-article-num {
+            color: var(--primary);
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .content { margin-left: 0; padding: 1.5rem; }
+            .header-path { display: none; }
+            .article-title { font-size: 1.4rem; }
+            .article-content { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <span class="header-title" id="siteTitle">📚 Wiki Reader</span>
+        <span class="header-path" id="sitePath"></span>
+    </header>
+
+    <div class="main">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="content">
+            <div class="content-inner" id="content">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ===== State =====
+        let indexData = null;
+        let currentArticle = null;
+        let allArticles = [];
+
+        // ===== DOM =====
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('content');
+        const siteTitle = document.getElementById('siteTitle');
+        const sitePath = document.getElementById('sitePath');
+
+        // ===== Init =====
+        async function init() {
+            try {
+                const response = await fetch('wiki-index.json');
+                if (!response.ok) throw new Error('index not found');
+                indexData = await response.json();
+
+                siteTitle.textContent = indexData.title;
+                sitePath.textContent = indexData.path;
+
+                // Flatten all articles
+                allArticles = [];
+                indexData.modules.forEach(module => {
+                    module.articles.forEach(article => {
+                        allArticles.push({
+                            ...article,
+                            module: module.name,
+                            moduleIcon: module.icon
+                        });
+                    });
+                });
+
+                renderSidebar();
+                renderHome();
+            } catch (err) {
+                content.innerHTML = `
+                    <div class="loading">
+                        <p>⚠️ 未找到 wiki-index.json</p>
+                        <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-muted);">
+                            运行: node wiki-auto.js
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== Render Sidebar =====
+        function renderSidebar(currentModuleIdx = -1, currentArticleIdx = -1) {
+            sidebar.innerHTML = indexData.modules.map((module, mIdx) => `
+                <div class="sidebar-module ${mIdx === currentModuleIdx ? 'active' : ''}">
+                    <div class="sidebar-module-header" onclick="toggleModule(${mIdx})">
+                        <span class="sidebar-module-icon">${module.icon}</span>
+                        <span class="sidebar-module-name">${module.name}</span>
+                        <span class="sidebar-module-count">${module.articles.length}</span>
+                    </div>
+                    <div class="sidebar-articles ${mIdx !== currentModuleIdx ? 'collapsed' : ''}" id="sidebar-articles-${mIdx}">
+                        ${module.articles.map((article, aIdx) => {
+                            const globalIdx = getGlobalIdx(mIdx, aIdx);
+                            return `
+                                <div class="sidebar-article ${globalIdx === currentArticleIdx ? 'active' : ''}"
+                                     onclick="openArticle(${globalIdx})">
+                                    <span class="sidebar-article-num">${article.num || ''}</span>
+                                    <span class="sidebar-article-title">${article.title}</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleModule(idx) {
+            const el = document.getElementById(`sidebar-articles-${idx}`);
+            if (el) el.classList.toggle('collapsed');
+        }
+
+        function getGlobalIdx(moduleIdx, articleIdx) {
+            let count = 0;
+            for (let i = 0; i < moduleIdx; i++) {
+                count += indexData.modules[i].articles.length;
+            }
+            return count + articleIdx;
+        }
+
+        function getModuleArticleIdx(globalIdx) {
+            let count = 0;
+            for (let i = 0; i < indexData.modules.length; i++) {
+                const len = indexData.modules[i].articles.length;
+                if (globalIdx < count + len) {
+                    return { moduleIdx: i, articleIdx: globalIdx - count };
+                }
+                count += len;
+            }
+            return { moduleIdx: -1, articleIdx: -1 };
+        }
+
+        // ===== Render Home =====
+        function renderHome() {
+            content.innerHTML = `
+                <div class="home-view">
+                    ${indexData.modules.map((module, mIdx) => `
+                        <div class="module-card">
+                            <div class="module-card-header">
+                                <span class="module-card-icon">${module.icon}</span>
+                                <span class="module-card-name">${module.name}</span>
+                                <span class="module-card-count">${module.articles.length} 篇</span>
+                            </div>
+                            <div class="module-card-articles">
+                                ${module.articles.slice(0, 5).map((article, aIdx) => {
+                                    const globalIdx = getGlobalIdx(mIdx, aIdx);
+                                    return `
+                                        <div class="module-card-article" onclick="openArticle(${globalIdx})">
+                                            <span class="module-card-article-num">${article.num || ''}</span>
+                                            ${article.title}
+                                        </div>
+                                    `;
+                                }).join('')}
+                                ${module.articles.length > 5 ? `
+                                    <div class="module-card-article" style="color: var(--text-muted);">
+                                        ... 还有 ${module.articles.length - 5} 篇
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // ===== Open Article =====
+        async function openArticle(globalIdx) {
+            const { moduleIdx, articleIdx } = getModuleArticleIdx(globalIdx);
+            if (moduleIdx < 0) return;
+
+            const module = indexData.modules[moduleIdx];
+            const article = module.articles[articleIdx];
+
+            content.innerHTML = `
+                <div class="article-view">
+                    <button class="article-back" onclick="goHome()">← 返回目录</button>
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(article.path);
+                if (!response.ok) throw new Error('File not found');
+                const markdown = await response.text();
+
+                const html = parseMarkdown(markdown);
+                const headings = extractHeadings(html);
+
+                // Update sidebar
+                renderSidebar(moduleIdx, articleIdx);
+
+                // Render article
+                const prev = globalIdx > 0 ? allArticles[globalIdx - 1] : null;
+                const next = globalIdx < allArticles.length - 1 ? allArticles[globalIdx + 1] : null;
+
+                content.innerHTML = `
+                    <div class="article-view">
+                        <button class="article-back" onclick="goHome()">← 返回目录</button>
+
+                        <div class="article-source">📄 ${article.path}</div>
+
+                        <header class="article-header">
+                            <div class="article-meta">
+                                <span class="article-module-tag">${module.icon} ${module.name}</span>
+                            </div>
+                            <h1 class="article-title">${article.title}</h1>
+                        </header>
+
+                        <article class="article-content">
+                            <div class="article-body">${html}</div>
+                        </article>
+
+                        <nav class="article-footer-nav">
+                            ${prev ? `
+                                <button class="nav-btn prev" onclick="openArticle(${globalIdx - 1})">
+                                    <span class="nav-btn-label">← 上一篇</span>
+                                    <span class="nav-btn-title">${prev.title.slice(0, 40)}${prev.title.length > 40 ? '...' : ''}</span>
+                                </button>
+                            ` : '<div></div>'}
+                            ${next ? `
+                                <button class="nav-btn next" onclick="openArticle(${globalIdx + 1})">
+                                    <span class="nav-btn-label">下一篇 →</span>
+                                    <span class="nav-btn-title">${next.title.slice(0, 40)}${next.title.length > 40 ? '...' : ''}</span>
+                                </button>
+                            ` : '<div></div>'}
+                        </nav>
+                    </div>
+                `;
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                content.innerHTML = `
+                    <div class="article-view">
+                        <button class="article-back" onclick="goHome()">← 返回目录</button>
+                        <div class="loading">
+                            <p>⚠️ 无法加载: ${article.path}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function goHome() {
+            renderSidebar();
+            renderHome();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ===== Markdown Parser =====
+        function parseMarkdown(md) {
+            md = md.replace(/^---[\s\S]*?---\n/, '');
+
+            const headings = [];
+            let headingIdx = 0;
+            const lines = md.split('\n');
+            const result = [];
+            let inCodeBlock = false, codeContent = [];
+            let inBlockquote = false, bqLines = [];
+            let inList = false, listItems = [];
+
+            for (const line of lines) {
+                if (line.startsWith('```')) {
+                    if (!inCodeBlock) {
+                        inCodeBlock = true; codeContent = [];
+                    } else {
+                        result.push(`<pre><code>${escapeHtml(codeContent.join('\n'))}</code></pre>`);
+                        inCodeBlock = false;
+                    }
+                    continue;
+                }
+                if (inCodeBlock) { codeContent.push(line); continue; }
+
+                // Headers
+                const h4 = line.match(/^#### (.*)/);
+                const h3 = line.match(/^### (.*)/);
+                const h2 = line.match(/^## (.*)/);
+                const h1 = line.match(/^# (.*)/);
+
+                if (h4) { const t = processInline(h4[1]); result.push(`<h4>${t}</h4>`); continue; }
+                if (h3) { const t = processInline(h3[1]); result.push(`<h3>${t}</h3>`); continue; }
+                if (h2) { const t = processInline(h2[1]); result.push(`<h2>${t}</h2>`); continue; }
+                if (h1) { const t = processInline(h1[1]); result.push(`<h1>${t}</h1>`); continue; }
+
+                // Blockquote
+                if (line.startsWith('> ')) {
+                    if (!inBlockquote) inBlockquote = true;
+                    bqLines.push(`<p>${processInline(line.slice(2))}</p>`);
+                    continue;
+                } else if (inBlockquote) {
+                    result.push(`<blockquote>${bqLines.join('')}</blockquote>`);
+                    inBlockquote = false; bqLines = [];
+                }
+
+                // List
+                if (line.match(/^[-\*] /) || line.match(/^\d+\. /)) {
+                    inBlockquote = false; inList = true;
+                    listItems.push(`<li>${processInline(line.replace(/^[-\*]\s/, '').replace(/^\d+\.\s/, ''))}</li>`);
+                    continue;
+                } else if (inList) {
+                    result.push(`<ul>${listItems.join('')}</ul>`);
+                    inList = false; listItems = [];
+                }
+
+                // HR
+                if (line.match(/^---$/)) { result.push('<hr>'); continue; }
+
+                // Table row
+                if (line.includes('|')) {
+                    const cells = line.split('|').filter(c => c.trim() && !c.trim().match(/^-+$/));
+                    if (cells.length > 0) {
+                        result.push(`<tr>${cells.map(c => `<td>${c.trim()}</td>`).join('')}</tr>`);
+                    }
+                    continue;
+                }
+
+                // Paragraph
+                if (line.trim()) result.push(`<p>${processInline(line)}</p>`);
+            }
+
+            if (inList) result.push(`<ul>${listItems.join('')}</ul>`);
+            if (inBlockquote) result.push(`<blockquote>${bqLines.join('')}</blockquote>`);
+
+            // Wrap tables
+            let html = result.join('\n');
+            html = html.replace(/(<tr>.*?<\/tr>)+/gs, '<table>$&</table>');
+
+            return html;
+        }
+
+        function extractHeadings(html) {
+            const headings = [];
+            let idx = 0;
+            return html.replace(/<(h[1-4])>([^<]+)/g, (m, tag, text) => {
+                headings.push({ level: parseInt(tag[1]), text, id: `h${idx++}` });
+                return m;
+            });
+        }
+
+        function processInline(text) {
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ===== Start =====
+        init();
+    </script>
+</body>
+</html>
